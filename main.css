@@ -621,25 +621,6 @@
             transition: width 1.5s ease-in-out;
         }
         
-        .stat-card:nth-child(1) .loading-progress {
-            background-color: var(--accent-gold);
-            width: 90%;
-        }
-        
-        .stat-card:nth-child(2) .loading-progress {
-            background-color: var(--accent-green);
-            width: 85%;
-        }
-        
-        .stat-card:nth-child(3) .loading-progress {
-            background-color: var(--accent-red);
-            width: 95%;
-        }
-        
-        .stat-card:nth-child(4) .loading-progress {
-            background-color: var(--text-color);
-            width: 80%;
-        }
 
         /* Circuit board decoration */
         .circuit-decoration {
@@ -650,4 +631,40 @@
             height: 200px;
             z-index: -1;
             opacity: 0.1;
+        }.chart-container, .icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+        }
+        .icon-container span {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.2);
+            margin: 2px;
+        }
+        .icon-container span.filled {
+            background-color: var(--accent-gold);
+        }
+        /* Grid of dots for Academic Awards */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            justify-items: center;
+            margin: 0 auto 1rem;
+        }
+        .icon-grid span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.2);
+        }
+        .icon-grid span.filled {
+            background-color: var(--accent-red);
+        }
+        /* Hide old loading bars completely */
+        .stat-card .loading-bar {
+            display: none;
         }

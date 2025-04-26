@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex Morgan | Engineering Portfolio</title>
+    <title>Fengyou Liu | Engineering Portfolio</title>
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
 
     <section id="home" class="hero">
         <h2 class="animate">Electrical & Aerospace Engineering</h2>
-        <h1 class="animate">Fengyou Liu<br>Building <span class="highlight">solutions</span>.</h1>
+        <h1 class="animate">Fengyou Liu</span>.</h1>
         <p class="animate">First-year engineering student specializing in electromechanical systems and industrial design with a focus on sustainability.</p>
         <a href="#projects" class="cta-button animate">View My Work</a>
         
@@ -50,44 +50,44 @@
 
     <section id="stats" class="stats-section">
         <div class="stats-grid">
-            <div class="stat-card animate">
-                <h3>12+</h3>
-                <p>Completed Projects</p>
-                <div class="loading-bar">
-                    <div class="loading-progress"></div>
-                </div>
+            <!-- Completed Projects with donut chart -->
+            <div class="stat-card animate chart-card" data-completed="12" data-goal="15">
+                <div class="chart-container"></div>
+                <h3>12</h3>
+                <p>Completed Projects (15 goal)</p>
             </div>
-            <div class="stat-card animate">
+
+            <!-- GPA with donut chart -->
+            <div class="stat-card animate chart-card" data-completed="98" data-goal="100">
+                <div class="chart-container"></div>
                 <h3>98</h3>
                 <p>Grade Point Average</p>
-                <div class="loading-bar">
-                    <div class="loading-progress"></div>
-                </div>
             </div>
-            <div class="stat-card animate">
+
+            <!-- Academic Awards with dot grid -->
+            <div class="stat-card animate icon-progress" data-count="4" data-goal="8">
+                <div class="icon-container"></div>
                 <h3>4</h3>
                 <p>Academic Awards</p>
-                <div class="loading-bar">
-                    <div class="loading-progress"></div>
-                </div>
             </div>
-            <div class="stat-card animate">
-                <h3>3</h3>
-                <p>Industry Internships</p>
-                <div class="loading-bar">
-                    <div class="loading-progress"></div>
-                </div>
+
+            <!-- Internships with icon progression -->
+            <div class="stat-card animate icon-progress" data-count="1" data-goal="4">
+                <div class="icon-container"></div>
+                <h3>1</h3>
+                <p>Internship</p>
             </div>
         </div>
     </section>
 
+
     <section id="about" class="about-section">
         <div class="about-image animate">
-            <img src="/api/placeholder/500/600" alt="Alex Morgan">
+            <img src="/api/placeholder/500/600" alt="Fengyou Liu">
         </div>
         <div class="about-content">
             <h2 class="section-title animate">About Me</h2>
-            <p class="animate">I'm a fourth-year electrical and mechanical engineering student with a passion for creating innovative solutions that bridge the gap between theory and practical application. My academic journey has been focused on developing a deep understanding of electromechanical systems, control theory, and sustainable design principles.</p>
+            <p class="animate">I'm a first-year electrical and mechanical engineering student with a passion for creating innovative solutions that bridge the gap between theory and practical application. My academic journey has been focused on developing a deep understanding of electromechanical systems, control theory, and sustainable design principles.</p>
             <p class="animate">Through my coursework and industry experiences, I've developed expertise in CAD modeling, circuit design, embedded systems programming, and industrial manufacturing processes. I'm particularly interested in renewable energy systems and smart infrastructure that can help build a more sustainable future.</p>
             <div class="skills animate">
                 <div class="skill-tag">CAD Design</div>
@@ -189,7 +189,7 @@
                 </svg>
             </a>
         </div>
-        <p class="copyright">&copy; 2025 Alex Morgan. All rights reserved.</p>
+        <p class="copyright">&copy; 2025 Fengyou Liu. All rights reserved.</p>
     </footer>
 
     <script>
@@ -239,7 +239,7 @@
         // Stats animation
         const statElements = document.querySelectorAll('.stat-card h3');
 
-function animateStats() {
+        function animateStats() {
     // Define animation duration in milliseconds
     const duration = 2000; // 2 seconds
     const fps = 60;
@@ -291,8 +291,8 @@ function animateStats() {
     });
 }
 
-// Easing function for smoother animation
-function easeOutQuad(t) {
+        // Easing function for smoother animation
+        function easeOutQuad(t) {
     return t * (2 - t);
 }
         
@@ -316,6 +316,43 @@ function easeOutQuad(t) {
             e.preventDefault();
             alert('Thanks for your message! This is a demo form, so no message was actually sent.');
             contactForm.reset();
+        });
+
+
+            document.addEventListener('DOMContentLoaded', () => {
+
+            // Donut charts for Completed Projects & GPA
+            document.querySelectorAll('.chart-card').forEach(card => {
+                const completed = +card.dataset.completed;
+                const goal = +card.dataset.goal;
+                const percent = Math.min((completed / goal) * 100, 100);
+                const svgNS = 'http://www.w3.org/2000/svg';
+                const svg = document.createElementNS(svgNS, 'svg');
+                svg.setAttribute('viewBox', '0 0 36 36');
+                svg.innerHTML = `
+                    <path stroke="#444" stroke-width="2" fill="none" d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path stroke="var(--accent-gold)" stroke-width="2" stroke-dasharray="${percent},100" fill="none" d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <text x="18" y="20.35" font-size="8" text-anchor="middle" fill="var(--text-color)">${Math.floor(percent)}%</text>
+                `;
+                card.querySelector('.chart-container').appendChild(svg);
+            });
+
+
+            // Icon-based progression for Internships and academic
+            document.querySelectorAll('.icon-progress').forEach(card => {
+                const count = +card.dataset.count;
+                const goal = +card.dataset.goal;
+                const container = card.querySelector('.icon-container');
+                for (let i = 1; i <= goal; i++) {
+                    const dot = document.createElement('span');
+                    if (i <= count) dot.classList.add('filled');
+                    container.appendChild(dot);
+                }
+            });
         });
     </script>
 </body>
