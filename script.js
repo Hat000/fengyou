@@ -1,481 +1,495 @@
-/* ========================================
+/* ════════════════════════════════════════════════════════════
    FENGYOU.ORG — Main Script
-   Particles · GSAP Animations · Navigation
-   ======================================== */
+   3D Filing Cabinet Experience
+   Three.js r161 · GSAP ScrollTrigger · Lenis
+   ════════════════════════════════════════════════════════════ */
 
-;(function () {
-    'use strict';
+import * as THREE from 'three';
+import { GLTFLoader }               from 'three/addons/loaders/GLTFLoader.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
-    // ─── Tagline Randomizer ─────────────────────────
-    const taglines = [
-        'Making electrons do useless things \u2014 some more useless than others.',
-        'I build things that fly, things that think, and things nobody asked for.'
-    ];
+// ─────────────────────────────────────────────
+// PROJECT DATA
+// ─────────────────────────────────────────────
+const PROJECTS = [
+  {
+    number: '01',
+    title: 'Autonomous Drone',
+    description:
+      'A custom-built quadrotor with onboard computer vision for obstacle avoidance and GPS-denied navigation. Uses a Raspberry Pi 4 with a depth camera and a custom PX4-based flight controller. Implements a modified RRT* path planner and a cascaded PID attitude controller tuned with Ziegler–Nichols.',
+    tags: ['C++', 'ROS 2', 'Raspberry Pi', 'PX4', 'OpenCV', 'Python'],
+    links: [
+      { label: 'GitHub Repo', url: 'https://github.com/Hat000', icon: 'github' },
+    ],
+    meta: ['2025 · Ongoing', 'Hardware + Software'],
+  },
+  {
+    number: '02',
+    title: 'Signal Processor',
+    description:
+      'A real-time FPGA-based digital signal processor implementing an FFT pipeline for audio spectrum analysis. Written in VHDL with a custom AXI-lite interface. Achieves sub-millisecond latency at 48 kHz sample rate with 1024-point FFT.',
+    tags: ['VHDL', 'FPGA', 'Xilinx Vivado', 'AXI', 'DSP', 'MATLAB'],
+    links: [
+      { label: 'GitHub Repo', url: 'https://github.com/Hat000', icon: 'github' },
+    ],
+    meta: ['2025 · Complete', 'Digital Hardware Design'],
+  },
+  {
+    number: '03',
+    title: 'ML Research Tool',
+    description:
+      'A research automation tool for running and visualizing PyTorch experiments. Handles hyperparameter sweeps, live loss curves, and experiment comparison. Designed to make the iterate-train-compare loop as fast as possible for solo researchers.',
+    tags: ['Python', 'PyTorch', 'Matplotlib', 'Click', 'YAML', 'SQLite'],
+    links: [
+      { label: 'GitHub Repo', url: 'https://github.com/Hat000', icon: 'github' },
+    ],
+    meta: ['2024 · Complete', 'Developer Tooling'],
+  },
+  {
+    number: '04',
+    title: 'This Website',
+    description:
+      'An immersive 3D portfolio built with Three.js. The viewer starts inside a closed filing cabinet drawer — scrolling pulls the drawer open. The folders inside are the navigation. No framework, no build step. Just HTML, CSS, and a lot of WebGL.',
+    tags: ['Three.js', 'WebGL', 'GSAP', 'Lenis', 'GLTF', 'JavaScript'],
+    links: [
+      { label: 'GitHub Repo', url: 'https://github.com/Hat000/fengyou', icon: 'github' },
+      { label: 'You\'re looking at it', url: '#', icon: 'external' },
+    ],
+    meta: ['2026 · Ongoing', 'Creative Dev / 3D Web'],
+  },
+];
 
-    const taglineEl = document.getElementById('tagline');
-    if (taglineEl) {
-        taglineEl.textContent = taglines[Math.floor(Math.random() * taglines.length)];
-    }
+// ─────────────────────────────────────────────
+// TAGLINES (random on load)
+// ─────────────────────────────────────────────
+const TAGLINES = [
+  '"Making electrons do useless things — some more useless than others."',
+  '"I build things that fly, things that think, and things nobody asked for."',
+  '"Somewhere between the schematic and the crash log is where I live."',
+  '"If it doesn\'t have a battery, I\'m probably not interested."',
+];
 
-    // ─── Particle System (Canvas) ───────────────────
-    const canvas = document.getElementById('particles');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let mouse = { x: -9999, y: -9999 };
-        let particles = [];
-        let animationId;
+document.getElementById('tagline').textContent =
+  TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
 
-        const CONFIG = {
-            count: 60,
-            maxDist: 140,
-            speed: 0.35,
-            radius: 1.5,
-            mouseRadius: 150,
-            mouseRepel: 0.6,
-            lineOpacity: 0.12,
-            colors: {
-                emerald: 'rgba(16, 185, 129,',
-                amber: 'rgba(232, 160, 52,'
-            },
-            amberChance: 0.12  // 12% of particles are amber
-        };
+// ─────────────────────────────────────────────
+// GSAP PLUGIN REGISTRATION
+// ─────────────────────────────────────────────
+gsap.registerPlugin(ScrollTrigger);
 
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
+// ─────────────────────────────────────────────
+// LENIS SMOOTH SCROLL
+// ─────────────────────────────────────────────
+const lenis = new Lenis({
+  duration: 2.2,          // slow, physical "pulling drawer" feel
+  smoothWheel: true,
+  smoothTouch: false,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+});
 
-        function createParticle() {
-            const isAmber = Math.random() < CONFIG.amberChance;
-            return {
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vx: (Math.random() - 0.5) * CONFIG.speed,
-                vy: (Math.random() - 0.5) * CONFIG.speed,
-                r: CONFIG.radius + Math.random() * 0.8,
-                color: isAmber ? CONFIG.colors.amber : CONFIG.colors.emerald,
-                alpha: 0.3 + Math.random() * 0.5
-            };
-        }
+lenis.on('scroll', ScrollTrigger.update);
 
-        function initParticles() {
-            particles = [];
-            // Scale count to screen area
-            const area = width * height;
-            const count = Math.min(CONFIG.count, Math.floor(area / 18000));
-            for (let i = 0; i < count; i++) {
-                particles.push(createParticle());
-            }
-        }
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000);
+});
+gsap.ticker.lagSmoothing(0);
 
-        function drawParticle(p) {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + p.alpha + ')';
-            ctx.fill();
-        }
+// ─────────────────────────────────────────────
+// THREE.JS SCENE SETUP
+// ─────────────────────────────────────────────
+const canvas  = document.getElementById('three-canvas');
+const W       = window.innerWidth;
+const H       = window.innerHeight;
 
-        function drawLine(a, b, dist) {
-            const opacity = (1 - dist / CONFIG.maxDist) * CONFIG.lineOpacity;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = 'rgba(16, 185, 129,' + opacity + ')';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-        }
+// Renderer
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  powerPreference: 'high-performance',
+});
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.02;  // near-black at start
+renderer.outputColorSpace  = THREE.SRGBColorSpace;
 
-        function update() {
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
+// Scene
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x1a0e08, 0.18); // warm dark fog, density decreases on scroll
 
-                // Mouse repulsion
-                const dx = p.x - mouse.x;
-                const dy = p.y - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < CONFIG.mouseRadius && dist > 0) {
-                    const force = (CONFIG.mouseRadius - dist) / CONFIG.mouseRadius;
-                    p.vx += (dx / dist) * force * CONFIG.mouseRepel;
-                    p.vy += (dy / dist) * force * CONFIG.mouseRepel;
-                }
+// Camera — starts inside the cabinet
+const camera = new THREE.PerspectiveCamera(70, W / H, 0.01, 500);
+// Initial position: inside the closed drawer — we'll fine-tune after model loads
+camera.position.set(0, 0.5, -2);
+camera.lookAt(0, 0, 2);
 
-                // Damping
-                p.vx *= 0.98;
-                p.vy *= 0.98;
+// ─────────────────────────────────────────────
+// LIGHTS
+// ─────────────────────────────────────────────
+RectAreaLightUniformsLib.init();
 
-                // Minimum velocity (keep them moving)
-                const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-                if (speed < CONFIG.speed * 0.3) {
-                    p.vx += (Math.random() - 0.5) * 0.05;
-                    p.vy += (Math.random() - 0.5) * 0.05;
-                }
+// Ambient — very dim, warms up on scroll
+const ambientLight = new THREE.AmbientLight(0x3D2A18, 0.08);
+scene.add(ambientLight);
 
-                p.x += p.vx;
-                p.y += p.vy;
+// Rect area light — light flooding in from the FRONT of the cabinet
+// Position will be updated in fitCameraToModel after we know the real bounds
+const rectLight = new THREE.RectAreaLight(0xFFD9A0, 0, 80, 100);
+rectLight.position.set(0, 0, -80);
+rectLight.lookAt(0, 0, 0);
+scene.add(rectLight);
 
-                // Wrap around edges
-                if (p.x < -10) p.x = width + 10;
-                if (p.x > width + 10) p.x = -10;
-                if (p.y < -10) p.y = height + 10;
-                if (p.y > height + 10) p.y = -10;
-            }
-        }
+// Spot light from the front — creates the "door of light" cone into the interior
+const spotLight = new THREE.SpotLight(0xFFCB87, 0, 400, Math.PI * 0.35, 0.4, 1.5);
+spotLight.position.set(0, 0, -80);
+spotLight.target.position.set(0, 0, 50);
+scene.add(spotLight);
+scene.add(spotLight.target);
 
-        function draw() {
-            ctx.clearRect(0, 0, width, height);
+// Point light deep inside cabinet — warm fill for back wall and ceiling
+const innerLight = new THREE.PointLight(0xCC8844, 0, 300);
+innerLight.position.set(0, 0, 20);
+scene.add(innerLight);
 
-            // Draw connecting lines
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < CONFIG.maxDist) {
-                        drawLine(particles[i], particles[j], dist);
-                    }
-                }
-            }
+// ─────────────────────────────────────────────
+// GLTF MODEL LOADING
+// ─────────────────────────────────────────────
+let cabinetScene   = null;
+let mainDrawer     = null;  // drawer_04_low — animation target
+let drawerAxis     = 'z';   // default pull axis (to be confirmed visually)
+let drawerOpenDist = -14;   // negative = pull toward camera (tune after visual check)
 
-            // Draw particles
-            for (let i = 0; i < particles.length; i++) {
-                drawParticle(particles[i]);
-            }
-        }
+const loadingFill = document.getElementById('loading-fill');
+const loadingScreen = document.getElementById('loading-screen');
 
-        function animate() {
-            update();
-            draw();
-            animationId = requestAnimationFrame(animate);
-        }
+const loader = new GLTFLoader();
+loader.load(
+  './rusty_filing_cabinet.glb',
 
-        // Throttled mouse tracking
-        let mouseThrottle = false;
-        document.addEventListener('mousemove', function (e) {
-            if (mouseThrottle) return;
-            mouseThrottle = true;
-            requestAnimationFrame(function () {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-                mouseThrottle = false;
-            });
-        });
+  // onLoad
+  (gltf) => {
+    cabinetScene = gltf.scene;
+    scene.add(cabinetScene);
 
-        // Reset mouse when it leaves the window
-        document.addEventListener('mouseleave', function () {
-            mouse.x = -9999;
-            mouse.y = -9999;
-        });
-
-        // Handle resize
-        let resizeTimer;
-        window.addEventListener('resize', function () {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function () {
-                resize();
-                initParticles();
-            }, 200);
-        });
-
-        // Check reduced motion preference
-        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-        if (!prefersReduced.matches) {
-            resize();
-            initParticles();
-            animate();
-        }
-
-        // Listen for changes in motion preference
-        prefersReduced.addEventListener('change', function (e) {
-            if (e.matches) {
-                cancelAnimationFrame(animationId);
-            } else {
-                resize();
-                initParticles();
-                animate();
-            }
-        });
-    }
-
-    // ─── Navigation ─────────────────────────────────
-    const nav = document.getElementById('nav');
-    const hamburger = document.getElementById('hamburger');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const navLinks = document.querySelectorAll('.nav-link');
-    const mobileLinks = document.querySelectorAll('.mobile-link');
-    const sections = document.querySelectorAll('section[id]');
-
-    // Scroll → solid nav background
-    let lastScroll = 0;
-    function handleNavScroll() {
-        const scrollY = window.scrollY;
-        if (scrollY > 50) {
-            nav.classList.add('scrolled');
+    // Apply DoubleSide to all materials — critical for viewing interior surfaces
+    cabinetScene.traverse((child) => {
+      if (child.isMesh) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach((mat) => { mat.side = THREE.DoubleSide; });
         } else {
-            nav.classList.remove('scrolled');
+          child.material.side = THREE.DoubleSide;
         }
-        lastScroll = scrollY;
-    }
-
-    window.addEventListener('scroll', handleNavScroll, { passive: true });
-
-    // Active section highlighting
-    function updateActiveNav() {
-        const scrollY = window.scrollY + window.innerHeight * 0.35;
-
-        let current = '';
-        sections.forEach(function (section) {
-            const top = section.offsetTop;
-            const bottom = top + section.offsetHeight;
-            if (scrollY >= top && scrollY < bottom) {
-                current = section.getAttribute('id');
-            }
-        });
-
-        navLinks.forEach(function (link) {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === '#' + current) {
-                link.classList.add('active');
-            }
-        });
-    }
-
-    window.addEventListener('scroll', updateActiveNav, { passive: true });
-
-    // Hamburger menu toggle
-    if (hamburger && mobileMenu) {
-        hamburger.addEventListener('click', function () {
-            const isOpen = hamburger.classList.toggle('open');
-            mobileMenu.classList.toggle('open');
-            hamburger.setAttribute('aria-expanded', isOpen);
-            mobileMenu.setAttribute('aria-hidden', !isOpen);
-            document.body.style.overflow = isOpen ? 'hidden' : '';
-        });
-
-        // Close on link click
-        mobileLinks.forEach(function (link) {
-            link.addEventListener('click', function () {
-                hamburger.classList.remove('open');
-                mobileMenu.classList.remove('open');
-                hamburger.setAttribute('aria-expanded', 'false');
-                mobileMenu.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = '';
-            });
-        });
-
-        // Close on escape
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
-                hamburger.classList.remove('open');
-                mobileMenu.classList.remove('open');
-                hamburger.setAttribute('aria-expanded', 'false');
-                mobileMenu.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = '';
-            }
-        });
-    }
-
-    // Smooth scroll for nav links (fallback for browsers without scroll-behavior)
-    document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-        anchor.addEventListener('click', function (e) {
-            const id = this.getAttribute('href');
-            if (id === '#') return;
-            const target = document.querySelector(id);
-            if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
+      }
     });
 
-    // ─── GSAP Animations ────────────────────────────
-    function initAnimations() {
-        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+    // Find animation target
+    mainDrawer = cabinetScene.getObjectByName('drawer_04_low');
 
-        gsap.registerPlugin(ScrollTrigger);
+    // Auto-fit camera to model bounds
+    fitCameraToModel(cabinetScene);
 
-        // Respect reduced motion
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            // Just make everything visible immediately
-            gsap.set('.hero-label, .hero-name, .hero-tagline, .hero-cta', { opacity: 1 });
-            gsap.set('.reveal, .reveal-left, .reveal-right', { opacity: 1, x: 0, y: 0 });
-            return;
-        }
+    // Initialize scroll animation now that model is loaded
+    initScrollAnimation();
 
-        // ── Hero entrance (timeline) ──
-        const heroTl = gsap.timeline({ delay: 0.3 });
+    // Reveal canvas + hide loading screen
+    canvas.classList.add('loaded');
+    setTimeout(() => {
+      loadingScreen.classList.add('hidden');
+      document.getElementById('site-footer').classList.add('visible');
+      // Animate about overlay in
+      revealAboutOverlay();
+    }, 600);
+  },
 
-        heroTl
-            .to('.hero-label', {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out'
-            })
-            .to('.hero-name', {
-                opacity: 1,
-                y: 0,
-                duration: 0.9,
-                ease: 'power3.out'
-            }, '-=0.5')
-            .to('.hero-tagline', {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out'
-            }, '-=0.5')
-            .to('.hero-cta', {
-                opacity: 1,
-                y: 0,
-                duration: 0.7,
-                ease: 'power3.out'
-            }, '-=0.4');
-
-        // ── Section headers ──
-        document.querySelectorAll('.section-label, .section-title').forEach(function (el) {
-            el.classList.add('reveal');
-        });
-
-        // ── Work section ──
-        gsap.utils.toArray('.project-card').forEach(function (card, i) {
-            card.classList.add('reveal');
-            gsap.to(card, {
-                scrollTrigger: {
-                    trigger: card,
-                    start: 'top 85%',
-                    once: true
-                },
-                opacity: 1,
-                y: 0,
-                duration: 0.7,
-                delay: i * 0.1,
-                ease: 'power2.out'
-            });
-        });
-
-        // ── About section ──
-        const aboutPhoto = document.querySelector('.about-photo-wrapper');
-        const aboutContent = document.querySelector('.about-content');
-
-        if (aboutPhoto) {
-            aboutPhoto.classList.add('reveal-left');
-            gsap.to(aboutPhoto, {
-                scrollTrigger: {
-                    trigger: aboutPhoto,
-                    start: 'top 80%',
-                    once: true
-                },
-                opacity: 1,
-                x: 0,
-                duration: 0.8,
-                ease: 'power2.out'
-            });
-        }
-
-        if (aboutContent) {
-            aboutContent.classList.add('reveal-right');
-            gsap.to(aboutContent, {
-                scrollTrigger: {
-                    trigger: aboutContent,
-                    start: 'top 80%',
-                    once: true
-                },
-                opacity: 1,
-                x: 0,
-                duration: 0.8,
-                delay: 0.15,
-                ease: 'power2.out'
-            });
-        }
-
-        // ── Contact section ──
-        const contactContent = document.querySelector('.contact-content');
-        if (contactContent) {
-            contactContent.classList.add('reveal');
-            gsap.to(contactContent, {
-                scrollTrigger: {
-                    trigger: contactContent,
-                    start: 'top 85%',
-                    once: true
-                },
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power2.out'
-            });
-        }
-
-        // ── Generic reveal elements (section labels, titles) ──
-        gsap.utils.toArray('.reveal').forEach(function (el) {
-            // Skip if already animated by specific animation above
-            if (el.classList.contains('project-card') ||
-                el === contactContent) return;
-
-            gsap.to(el, {
-                scrollTrigger: {
-                    trigger: el,
-                    start: 'top 85%',
-                    once: true
-                },
-                opacity: 1,
-                y: 0,
-                duration: 0.7,
-                ease: 'power2.out'
-            });
-        });
+  // onProgress
+  (progress) => {
+    if (progress.lengthComputable) {
+      const pct = (progress.loaded / progress.total) * 100;
+      loadingFill.style.width = pct + '%';
     }
+  },
 
-    // ─── Vanilla Tilt Init ──────────────────────────
-    function initTilt() {
-        if (typeof VanillaTilt === 'undefined') return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // onError
+  (error) => {
+    console.error('GLB load error:', error);
+    // Graceful fallback — show overlay without 3D
+    loadingScreen.classList.add('hidden');
+    canvas.style.display = 'none';
+    document.getElementById('darkness').style.opacity = '0';
+    document.getElementById('about-overlay').style.opacity = '1';
+    document.getElementById('about-overlay').style.pointerEvents = 'auto';
+    revealAboutOverlay();
+  }
+);
 
-        // Only init on desktop (tilt doesn't make sense on touch)
-        if (window.innerWidth < 768) return;
+// ─────────────────────────────────────────────
+// CAMERA FIT
+// ─────────────────────────────────────────────
+function fitCameraToModel(model) {
+  const box    = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
 
-        const cards = document.querySelectorAll('[data-tilt]');
-        VanillaTilt.init(Array.from(cards), {
-            max: 8,
-            speed: 400,
-            glare: true,
-            'max-glare': 0.1,
-            perspective: 1000,
-            gyroscope: false
-        });
-    }
+  // ── CAMERA ──────────────────────────────────────────────────────
+  // Position: inside the cabinet, near the front face, slightly below center.
+  // We want to look UP and INWARD so the rusty ceiling is dramatic above us,
+  // and we can see into the dark interior (the "closed drawer" feel).
+  const camZ = box.min.z + size.z * 0.08;   // just inside the front face
+  const camY = center.y - size.y * 0.15;    // slightly below center (looking up)
+  camera.position.set(center.x, camY, camZ);
+  camera.lookAt(center.x, center.y + size.y * 0.18, center.z + size.z * 0.4);
 
-    // ─── Initialize Everything ──────────────────────
-    // Wait for DOM + deferred scripts to load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            // Small delay to ensure GSAP/VanillaTilt are loaded (defer scripts)
-            requestAnimationFrame(function () {
-                initAnimations();
-                initTilt();
-            });
-        });
-    } else {
-        // DOM already ready, but check if GSAP loaded
-        // Give defer scripts a moment
-        setTimeout(function () {
-            initAnimations();
-            initTilt();
-        }, 100);
-    }
+  // ── LIGHTS ──────────────────────────────────────────────────────
+  // Front rect light: positioned OUTSIDE the front face, shining INTO the cabinet.
+  // When the drawer is pulled out, this light floods straight through the opening.
+  const lightZ = box.min.z - size.z * 0.25;  // in front of the cabinet face
+  rectLight.position.set(center.x, center.y, lightZ);
+  rectLight.width  = size.x * 1.4;
+  rectLight.height = size.y * 1.2;
+  rectLight.lookAt(center.x, center.y, center.z);
 
-    // Re-init tilt on resize (desktop ↔ mobile)
-    let tiltResizeTimer;
-    window.addEventListener('resize', function () {
-        clearTimeout(tiltResizeTimer);
-        tiltResizeTimer = setTimeout(function () {
-            // Destroy existing tilt instances
-            document.querySelectorAll('[data-tilt]').forEach(function (el) {
-                if (el.vanillaTilt) {
-                    el.vanillaTilt.destroy();
-                }
-            });
-            initTilt();
-        }, 300);
-    });
+  // Spot light from same front direction — for the dramatic light-cone effect
+  spotLight.position.set(center.x, center.y + size.y * 0.1, lightZ);
+  spotLight.target.position.set(center.x, center.y, center.z + size.z * 0.3);
+  spotLight.target.updateMatrixWorld();
+  spotLight.distance = size.z * 4;
 
-})();
+  // Interior fill light — warm glow from slightly above center inside the cabinet
+  innerLight.position.set(center.x, center.y + size.y * 0.15, center.z);
+  innerLight.distance = size.z * 3;
+
+  // ── FOG ─────────────────────────────────────────────────────────
+  // Calibrate fog so it fades out at roughly the back wall distance
+  scene.fog.density = 0.6 / size.z;
+
+  // ── NEAR/FAR CLIP ───────────────────────────────────────────────
+  camera.near = size.z * 0.002;
+  camera.far  = size.z * 10;
+  camera.updateProjectionMatrix();
+
+  // Store for scroll animation
+  window._cabinetData = { box, center, size };
+}
+
+// ─────────────────────────────────────────────
+// GSAP SCROLL ANIMATION
+// ─────────────────────────────────────────────
+const darkness      = document.getElementById('darkness');
+const aboutOverlay  = document.getElementById('about-overlay');
+const folderUI      = document.getElementById('folder-ui');
+
+function initScrollAnimation() {
+  if (!cabinetScene) return;
+
+  const { center, size } = window._cabinetData || {};
+  drawerOpenDist = size ? -(size.z * 0.75) : -14;
+
+  // Store original drawer position for animation reference
+  if (mainDrawer) {
+    mainDrawer.userData.originalPos = mainDrawer.position.clone();
+  }
+
+  ScrollTrigger.create({
+    trigger: '#scroll-space',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1.5,   // laggy for that physical drag feel
+    onUpdate: (self) => {
+      const p = self.progress; // 0 → 1
+
+      // ── PHASE 1: 0–0.25 → darkness fades, about overlay stays ──
+      const darkOpacity = p < 0.25 ? 1 - (p / 0.25) : 0;
+      darkness.style.opacity = darkOpacity;
+
+      // ── PHASE 2: 0.15–0.45 → about overlay fades ──
+      const aboutOpacity = p < 0.15 ? 1 : p < 0.45 ? 1 - ((p - 0.15) / 0.30) : 0;
+      aboutOverlay.style.opacity = aboutOpacity;
+      aboutOverlay.style.pointerEvents = aboutOpacity > 0.1 ? 'auto' : 'none';
+
+      // ── DRAWER ANIMATION: 0.1 → 0.9 → pulls open ──
+      if (mainDrawer && mainDrawer.userData.originalPos) {
+        const drawerProgress = Math.max(0, Math.min(1, (p - 0.1) / 0.8));
+        const eased = easeOutCubic(drawerProgress);
+        const offset = eased * drawerOpenDist;
+
+        // Apply offset on the correct axis (determined by inspection)
+        const orig = mainDrawer.userData.originalPos;
+        if (drawerAxis === 'z') {
+          mainDrawer.position.z = orig.z + offset;
+        } else if (drawerAxis === 'x') {
+          mainDrawer.position.x = orig.x + offset;
+        } else {
+          mainDrawer.position.y = orig.y + offset;
+        }
+      }
+
+      // ── LIGHTING: 0.15 → 1.0 → warm light floods in ──
+      const lightProgress = Math.max(0, Math.min(1, (p - 0.15) / 0.85));
+      const lightEased = easeOutQuad(lightProgress);
+      const { size } = window._cabinetData || { size: { z: 100 } };
+
+      renderer.toneMappingExposure = 0.02 + lightEased * 1.38;
+      rectLight.intensity          = lightEased * 12;
+      spotLight.intensity          = lightEased * 8;
+      innerLight.intensity         = lightEased * 6;
+      ambientLight.intensity       = 0.08 + lightEased * 1.2;
+      scene.fog.density            = (0.6 / size.z) * (1 - lightEased * 0.7);
+
+      // ── FOLDER UI: appears at 85%+ ──
+      if (p >= 0.85) {
+        folderUI.classList.add('visible');
+      } else {
+        folderUI.classList.remove('visible');
+      }
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// EASING FUNCTIONS
+// ─────────────────────────────────────────────
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeOutQuad(t)  { return 1 - (1 - t) * (1 - t); }
+
+// ─────────────────────────────────────────────
+// ABOUT OVERLAY REVEAL ANIMATION
+// ─────────────────────────────────────────────
+function revealAboutOverlay() {
+  const tl = gsap.timeline({ delay: 0.3 });
+  tl.to('.about-eyebrow', { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' })
+    .to('.about-name',    { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.4')
+    .to('.about-tagline', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.5')
+    .to('.about-details', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+    .to('.about-links',   { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '-=0.3')
+    .to('.scroll-hint',   { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.2');
+}
+
+// ─────────────────────────────────────────────
+// PROJECT PANEL
+// ─────────────────────────────────────────────
+const panel      = document.getElementById('project-panel');
+const panelClose = document.getElementById('panel-close');
+let activeFolder = null;
+let activeFolderOrigPos = null;
+
+function openProject(index) {
+  const proj = PROJECTS[index];
+  if (!proj) return;
+
+  // Populate panel
+  document.getElementById('panel-number').textContent      = proj.number;
+  document.getElementById('panel-title').textContent       = proj.title;
+  document.getElementById('panel-description').textContent = proj.description;
+
+  // Tags
+  const tagsEl = document.getElementById('panel-tags');
+  tagsEl.innerHTML = proj.tags
+    .map((t) => `<span class="panel-tag">${t}</span>`)
+    .join('');
+
+  // Links
+  const linksEl = document.getElementById('panel-links');
+  linksEl.innerHTML = proj.links
+    .map((l) => {
+      const icon = l.icon === 'github'
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+      return `<a href="${l.url}" class="panel-link" target="_blank" rel="noopener">${icon}${l.label}</a>`;
+    })
+    .join('');
+
+  // Meta
+  const metaEl = document.getElementById('panel-meta');
+  metaEl.innerHTML = proj.meta
+    .map((m) => `<span>${m}</span>`)
+    .join('');
+
+  // Open panel
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  panel.scrollTop = 0;
+  panelClose.focus();
+
+  // Disable lenis while panel is open
+  lenis.stop();
+}
+
+function closeProject() {
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  activeFolder = null;
+  lenis.start();
+}
+
+// Panel close button
+panelClose.addEventListener('click', closeProject);
+
+// Close on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && panel.classList.contains('open')) closeProject();
+});
+
+// Folder tab click handlers
+document.querySelectorAll('.folder-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const index = parseInt(tab.dataset.project, 10);
+
+    // Visual: deselect all, select clicked
+    document.querySelectorAll('.folder-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeFolder = tab;
+
+    openProject(index);
+  });
+});
+
+// ─────────────────────────────────────────────
+// RENDER LOOP
+// ─────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ─────────────────────────────────────────────
+// RESIZE HANDLER
+// ─────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+// ─────────────────────────────────────────────
+// MOBILE FALLBACK
+// (If WebGL is not supported or fails, show static layout)
+// ─────────────────────────────────────────────
+function checkWebGL() {
+  try {
+    const testCanvas = document.createElement('canvas');
+    return !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl'));
+  } catch (e) {
+    return false;
+  }
+}
+
+if (!checkWebGL()) {
+  canvas.style.display = 'none';
+  loadingScreen.classList.add('hidden');
+  document.getElementById('darkness').style.opacity = '0';
+  document.getElementById('about-overlay').style.opacity = '1';
+  document.getElementById('about-overlay').style.pointerEvents = 'auto';
+  document.getElementById('folder-ui').classList.add('visible');
+  revealAboutOverlay();
+  console.warn('[FALLBACK] WebGL not available — showing static layout');
+}

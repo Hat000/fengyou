@@ -1,221 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fengyou Liu — Engineer, Builder, Tinkerer</title>
-    <meta name="description" content="Fengyou Liu — Princeton '29 Electrical & Aerospace Engineering student. Building things that fly, things that think, and things nobody asked for.">
-    <meta name="author" content="Fengyou Liu">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fengyou Liu — Engineer & Builder</title>
+  <meta name="description" content="Fengyou Liu, Princeton '29 — Electrical & Aerospace Engineering. Building things that fly, think, and occasionally explode." />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Fengyou Liu — Engineer, Builder, Tinkerer">
-    <meta property="og:description" content="Princeton '29 · Electrical & Aerospace Engineering. Making electrons do useless things.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.fengyou.org">
-    <meta property="og:image" content="https://www.fengyou.org/FengyouLiu.jpg">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Fengyou Liu" />
+  <meta property="og:description" content="Princeton '29 · EE & Aerospace · Builder of things." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.fengyou.org" />
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Fengyou Liu — Engineer, Builder, Tinkerer">
-    <meta name="twitter:description" content="Princeton '29 · Electrical & Aerospace Engineering. Making electrons do useless things.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 
-    <!-- Favicon (inline SVG) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230B0F0E' width='100' height='100' rx='16'/><text x='50' y='68' font-family='system-ui' font-size='52' font-weight='700' fill='%2310B981' text-anchor='middle'>FL</text></svg>">
+  <!-- Three.js importmap -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <!-- Lenis smooth scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 
-    <!-- Vanilla Tilt -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" defer></script>
-
-    <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="main.css" />
 </head>
 <body>
-    <!-- Particle Canvas -->
-    <canvas id="particles" aria-hidden="true"></canvas>
 
-    <!-- Navigation -->
-    <header id="nav" role="banner">
-        <a href="#home" class="nav-logo" aria-label="Home">
-            FL<span class="logo-dot">.</span>
+  <!-- THREE.JS CANVAS — the filing cabinet world -->
+  <canvas id="three-canvas" aria-hidden="true"></canvas>
+
+  <!-- SCROLL SPACE — gives GSAP room to scrub (500vh) -->
+  <div id="scroll-space" aria-hidden="true"></div>
+
+  <!-- DARKNESS OVERLAY — pitch black at start, fades on scroll -->
+  <div id="darkness" aria-hidden="true"></div>
+
+  <!-- ABOUT OVERLAY — visible on dark landing state -->
+  <div id="about-overlay" role="main">
+    <div class="about-inner">
+      <div class="about-eyebrow">Princeton '29 &nbsp;·&nbsp; EE &amp; Aerospace</div>
+      <h1 class="about-name">Fengyou Liu</h1>
+      <p class="about-tagline" id="tagline"></p>
+
+      <div class="about-details">
+        <p>
+          I build things at the intersection of hardware and software —
+          systems that move, sense, and think. Currently studying
+          Electrical &amp; Aerospace Engineering at Princeton,
+          trying to make electrons do interesting things.
+        </p>
+      </div>
+
+      <div class="about-links">
+        <a href="mailto:fengyou@princeton.edu" class="about-link" aria-label="Email Fengyou">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          Email
         </a>
-        <nav role="navigation" aria-label="Main navigation">
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#work" class="nav-link">Work</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
-        </nav>
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </header>
+        <a href="https://github.com/Hat000" class="about-link" target="_blank" rel="noopener" aria-label="GitHub profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="https://linkedin.com/in/fengyou-liu" class="about-link" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+          LinkedIn
+        </a>
+      </div>
 
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-        <ul>
-            <li><a href="#home" class="mobile-link">Home</a></li>
-            <li><a href="#work" class="mobile-link">Work</a></li>
-            <li><a href="#about" class="mobile-link">About</a></li>
-            <li><a href="#contact" class="mobile-link">Contact</a></li>
-        </ul>
-    </div>
-
-    <main>
-        <!-- ==================== HERO ==================== -->
-        <section id="home" class="hero">
-            <div class="hero-content">
-                <p class="hero-label">Princeton '29 · Electrical &amp; Aerospace Engineering</p>
-                <h1 class="hero-name">Fengyou Liu<span class="hero-period">.</span></h1>
-                <p class="hero-tagline" id="tagline"></p>
-                <a href="#work" class="hero-cta">
-                    <span>View my work</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-                </a>
-            </div>
-            <div class="scroll-indicator" aria-hidden="true">
-                <div class="scroll-line"></div>
-            </div>
-        </section>
-
-        <!-- ==================== WORK ==================== -->
-        <section id="work" class="work-section">
-            <div class="section-header">
-                <span class="section-label">Portfolio</span>
-                <h2 class="section-title">Selected Work</h2>
-            </div>
-
-            <div class="bento-grid">
-                <!-- Featured Project (large) -->
-                <a href="#" class="project-card featured" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
-                    <div class="project-thumbnail featured-thumb">
-                        <div class="project-gradient grad-1"></div>
-                        <span class="featured-badge">Featured</span>
-                    </div>
-                    <div class="project-info">
-                        <h3>Smart Energy Monitoring System</h3>
-                        <p>An IoT-based power monitoring system for residential applications providing real-time energy consumption data and predictive analytics.</p>
-                        <div class="project-tags">
-                            <span>IoT</span>
-                            <span>PCB Design</span>
-                            <span>Data Analysis</span>
-                            <span>ESP32</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Project 2 -->
-                <a href="#" class="project-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.08">
-                    <div class="project-thumbnail">
-                        <div class="project-gradient grad-2"></div>
-                    </div>
-                    <div class="project-info">
-                        <h3>Precision Robotic Arm</h3>
-                        <p>6-axis robotic arm with advanced control algorithms for precision manufacturing.</p>
-                        <div class="project-tags">
-                            <span>Robotics</span>
-                            <span>Control Systems</span>
-                            <span>CAD</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Project 3 -->
-                <a href="#" class="project-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.08">
-                    <div class="project-thumbnail">
-                        <div class="project-gradient grad-3"></div>
-                    </div>
-                    <div class="project-info">
-                        <h3>Sustainable Water Filtration</h3>
-                        <p>Low-cost, solar-powered water filtration for regions with limited infrastructure.</p>
-                        <div class="project-tags">
-                            <span>Renewable Energy</span>
-                            <span>Fluid Dynamics</span>
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Project 4 -->
-                <a href="#" class="project-card" data-tilt data-tilt-max="8" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.08">
-                    <div class="project-thumbnail">
-                        <div class="project-gradient grad-4"></div>
-                    </div>
-                    <div class="project-info">
-                        <h3>Something Useless (But Fun)</h3>
-                        <p>Because not everything needs a reason. Sometimes you build things just to see if you can.</p>
-                        <div class="project-tags">
-                            <span>Arduino</span>
-                            <span>3D Printing</span>
-                            <span>Why Not</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        <!-- ==================== ABOUT ==================== -->
-        <section id="about" class="about-section">
-            <div class="about-grid">
-                <div class="about-photo-wrapper">
-                    <div class="about-photo">
-                        <img src="FengyouLiu.jpg" alt="Fengyou Liu" loading="lazy">
-                    </div>
-                </div>
-                <div class="about-content">
-                    <span class="section-label">About</span>
-                    <h2 class="section-title">A bit about me</h2>
-                    <p class="about-bio">
-                        I'm a first-year at Princeton studying electrical and aerospace engineering — which is a fancy way of saying I like making things move, fly, and occasionally explode (in a controlled manner). I'm drawn to the intersection of hardware design and real-world impact, from renewable energy systems to robots that actually do what you tell them.
-                    </p>
-                    <div class="currently-block">
-                        <span class="currently-label">Currently</span>
-                        <p>Exploring embedded systems, learning PCB design, and building projects that probably won't make it to this portfolio.</p>
-                    </div>
-                    <div class="about-links">
-                        <a href="mailto:fengyou@princeton.edu" class="about-link" aria-label="Email">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                            Email
-                        </a>
-                        <a href="https://github.com/Hat000" target="_blank" rel="noopener" class="about-link" aria-label="GitHub">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-                            GitHub
-                        </a>
-                        <a href="https://linkedin.com/in/fengyou-liu" target="_blank" rel="noopener" class="about-link" aria-label="LinkedIn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                            LinkedIn
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================== CONTACT / FOOTER ==================== -->
-        <section id="contact" class="contact-section">
-            <div class="contact-content">
-                <span class="section-label">Contact</span>
-                <h2 class="contact-heading">Let's build something.</h2>
-                <p class="contact-sub">Got a project, idea, or just want to say hi? I'm always open to chat.</p>
-                <a href="mailto:fengyou@princeton.edu" class="contact-email">fengyou@princeton.edu</a>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="footer-inner">
-            <p class="footer-tagline">Built with caffeine and too many late nights.</p>
-            <p class="footer-copy">&copy; 2026 Fengyou Liu</p>
+      <div class="scroll-hint" aria-label="Scroll down to open the drawer">
+        <span class="scroll-hint-text">scroll to open the drawer</span>
+        <div class="scroll-hint-arrow">
+          <svg width="14" height="22" viewBox="0 0 14 22" fill="none" aria-hidden="true">
+            <line x1="7" y1="0" x2="7" y2="18" stroke="currentColor" stroke-width="1.5"/>
+            <polyline points="2,13 7,18 12,13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-    </footer>
+      </div>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- FOLDER UI — appears when drawer is open -->
+  <nav id="folder-ui" aria-label="Project folders">
+    <div class="folder-tabs-label">— select a file —</div>
+    <div class="folder-tabs" role="list">
+
+      <button class="folder-tab" data-project="0" role="listitem" aria-label="View project: Autonomous Drone">
+        <div class="folder-tab-top">
+          <span class="tab-number">01</span>
+        </div>
+        <div class="folder-tab-body">
+          <span class="folder-label">Autonomous Drone</span>
+          <span class="folder-tag">Embedded · Control</span>
+        </div>
+      </button>
+
+      <button class="folder-tab" data-project="1" role="listitem" aria-label="View project: Signal Processor">
+        <div class="folder-tab-top">
+          <span class="tab-number">02</span>
+        </div>
+        <div class="folder-tab-body">
+          <span class="folder-label">Signal Processor</span>
+          <span class="folder-tag">DSP · FPGA</span>
+        </div>
+      </button>
+
+      <button class="folder-tab" data-project="2" role="listitem" aria-label="View project: ML Research Tool">
+        <div class="folder-tab-top">
+          <span class="tab-number">03</span>
+        </div>
+        <div class="folder-tab-body">
+          <span class="folder-label">ML Research Tool</span>
+          <span class="folder-tag">Python · PyTorch</span>
+        </div>
+      </button>
+
+      <button class="folder-tab" data-project="3" role="listitem" aria-label="View project: This Website">
+        <div class="folder-tab-top">
+          <span class="tab-number">04</span>
+        </div>
+        <div class="folder-tab-body">
+          <span class="folder-label">This Website</span>
+          <span class="folder-tag">Three.js · WebGL</span>
+        </div>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- PROJECT PANEL — slides in from right on folder click -->
+  <aside id="project-panel" role="dialog" aria-modal="true" aria-label="Project details" aria-hidden="true">
+    <button id="panel-close" aria-label="Close project details">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="panel-content">
+      <span class="panel-number" id="panel-number">01</span>
+      <h2 class="panel-title" id="panel-title">Project Title</h2>
+      <p class="panel-description" id="panel-description">Loading…</p>
+      <div class="panel-tags" id="panel-tags"></div>
+      <div class="panel-links" id="panel-links"></div>
+      <div class="panel-meta" id="panel-meta"></div>
+    </div>
+  </aside>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" aria-live="polite">
+    <div class="loading-inner">
+      <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+      <p class="loading-text">Opening the drawer<span class="loading-dots">...</span></p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer id="site-footer">
+    <a href="https://skfb.ly/oKoNK" target="_blank" rel="noopener" class="footer-credit">
+      3D: "Rusty Filing Cabinet" by Amiel Goco (CC BY 4.0)
+    </a>
+    <span class="footer-copy">© 2026 Fengyou Liu · Built with ☕</span>
+  </footer>
+
+  <!-- Main JS (ES module — uses importmap for Three.js) -->
+  <script type="module" src="script.js"></script>
+
 </body>
 </html>
