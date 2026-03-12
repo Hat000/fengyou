@@ -1,12 +1,8 @@
 /* ════════════════════════════════════════════════════════════
    FENGYOU.ORG — Main Script
-   3D Filing Cabinet Experience
-   Three.js r161 · GSAP ScrollTrigger · Lenis
+   CSS 3D Filing Cabinet Experience
+   GSAP ScrollTrigger · Lenis (no Three.js)
    ════════════════════════════════════════════════════════════ */
-
-import * as THREE from 'three';
-import { GLTFLoader }               from 'three/addons/loaders/GLTFLoader.js';
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
 // ─────────────────────────────────────────────
 // PROJECT DATA
@@ -16,7 +12,7 @@ const PROJECTS = [
     number: '01',
     title: 'Autonomous Drone',
     description:
-      'A custom-built quadrotor with onboard computer vision for obstacle avoidance and GPS-denied navigation. Uses a Raspberry Pi 4 with a depth camera and a custom PX4-based flight controller. Implements a modified RRT* path planner and a cascaded PID attitude controller tuned with Ziegler–Nichols.',
+      'A custom-built quadrotor with onboard computer vision for obstacle avoidance and GPS-denied navigation. Uses a Raspberry Pi 4 with a depth camera and a custom PX4-based flight controller. Implements a modified RRT* path planner and a cascaded PID attitude controller tuned with Ziegler-Nichols.',
     tags: ['C++', 'ROS 2', 'Raspberry Pi', 'PX4', 'OpenCV', 'Python'],
     links: [
       { label: 'GitHub Repo', url: 'https://github.com/Hat000', icon: 'github' },
@@ -49,18 +45,18 @@ const PROJECTS = [
     number: '04',
     title: 'This Website',
     description:
-      'An immersive 3D portfolio built with Three.js. The viewer starts inside a closed filing cabinet drawer — scrolling pulls the drawer open. The folders inside are the navigation. No framework, no build step. Just HTML, CSS, and a lot of WebGL.',
-    tags: ['Three.js', 'WebGL', 'GSAP', 'Lenis', 'GLTF', 'JavaScript'],
+      'An immersive 3D portfolio built with CSS 3D transforms and GSAP. The viewer starts inside a closed filing cabinet drawer — scrolling pulls the drawer open and the camera zooms out. The folders inside are the navigation. No framework, no build step.',
+    tags: ['CSS 3D', 'GSAP', 'Lenis', 'JavaScript', 'HTML/CSS'],
     links: [
       { label: 'GitHub Repo', url: 'https://github.com/Hat000/fengyou', icon: 'github' },
-      { label: 'You\'re looking at it', url: '#', icon: 'external' },
+      { label: "You're looking at it", url: '#', icon: 'external' },
     ],
     meta: ['2026 · Ongoing', 'Creative Dev / 3D Web'],
   },
 ];
 
 // ─────────────────────────────────────────────
-// TAGLINES (random on load)
+// TAGLINES
 // ─────────────────────────────────────────────
 const TAGLINES = [
   '"Making electrons do useless things — some more useless than others."',
@@ -81,7 +77,7 @@ gsap.registerPlugin(ScrollTrigger);
 // LENIS SMOOTH SCROLL
 // ─────────────────────────────────────────────
 const lenis = new Lenis({
-  duration: 2.2,          // slow, physical "pulling drawer" feel
+  duration: 2.2,
   smoothWheel: true,
   smoothTouch: false,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -95,267 +91,52 @@ gsap.ticker.add((time) => {
 gsap.ticker.lagSmoothing(0);
 
 // ─────────────────────────────────────────────
-// THREE.JS SCENE SETUP
+// DOM REFERENCES
 // ─────────────────────────────────────────────
-const canvas  = document.getElementById('three-canvas');
-const W       = window.innerWidth;
-const H       = window.innerHeight;
+const darkness     = document.getElementById('darkness');
+const aboutOverlay = document.getElementById('about-overlay');
+const cabinetScene = document.getElementById('cabinet-scene');
+const drawerFace   = document.getElementById('drawer-face');
+const lightGlow    = document.querySelector('.light-glow');
+const lightRays    = document.querySelector('.light-rays');
+const lightHaze    = document.querySelector('.light-haze');
+const rays         = document.querySelectorAll('.ray');
+const drawerFiles    = document.querySelector('.drawer-files');
+const drawerInterior = document.querySelector('.drawer-interior');
+const drawerOpen     = document.querySelector('.drawer-open');
+const panel          = document.getElementById('project-panel');
+const panelClose     = document.getElementById('panel-close');
+const sceneDim       = document.getElementById('scene-dim');
+const loadingScreen  = document.getElementById('loading-screen');
 
-// Renderer
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  powerPreference: 'high-performance',
-});
-renderer.setSize(W, H);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-renderer.toneMapping       = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.02;  // near-black at start
-renderer.outputColorSpace  = THREE.SRGBColorSpace;
+// Cache pseudo-element targets (we'll update their parent's style)
+const drawerTop1     = document.querySelector('.drawer-top-1');
+const drawerBottom1  = document.querySelector('.drawer-bottom-1');
+// For interior ::after and ::before, we need to use a targeted approach
+const interiorAfterStyle = document.createElement('style');
+interiorAfterStyle.id = 'interior-glow-style';
+document.head.appendChild(interiorAfterStyle);
 
-// Scene
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0x1a0e08, 0.18); // warm dark fog, density decreases on scroll
-
-// Camera — starts inside the cabinet
-const camera = new THREE.PerspectiveCamera(70, W / H, 0.01, 500);
-// Initial position: inside the closed drawer — we'll fine-tune after model loads
-camera.position.set(0, 0.5, -2);
-camera.lookAt(0, 0, 2);
-
-// ─────────────────────────────────────────────
-// LIGHTS
-// ─────────────────────────────────────────────
-RectAreaLightUniformsLib.init();
-
-// Ambient — very dim, warms up on scroll
-const ambientLight = new THREE.AmbientLight(0x3D2A18, 0.08);
-scene.add(ambientLight);
-
-// Rect area light — light flooding in from the FRONT of the cabinet
-// Position will be updated in fitCameraToModel after we know the real bounds
-const rectLight = new THREE.RectAreaLight(0xFFD9A0, 0, 80, 100);
-rectLight.position.set(0, 0, -80);
-rectLight.lookAt(0, 0, 0);
-scene.add(rectLight);
-
-// Spot light from the front — creates the "door of light" cone into the interior
-const spotLight = new THREE.SpotLight(0xFFCB87, 0, 400, Math.PI * 0.35, 0.4, 1.5);
-spotLight.position.set(0, 0, -80);
-spotLight.target.position.set(0, 0, 50);
-scene.add(spotLight);
-scene.add(spotLight.target);
-
-// Point light deep inside cabinet — warm fill for back wall and ceiling
-const innerLight = new THREE.PointLight(0xCC8844, 0, 300);
-innerLight.position.set(0, 0, 20);
-scene.add(innerLight);
+// Read CSS custom property values
+const style = getComputedStyle(document.documentElement);
+const startZ = parseInt(style.getPropertyValue('--scene-z')) || 800;
 
 // ─────────────────────────────────────────────
-// GLTF MODEL LOADING
+// LOADING — instant (no GLB to load)
 // ─────────────────────────────────────────────
-let cabinetScene   = null;
-let mainDrawer     = null;  // drawer_04_low — animation target
-let drawerAxis     = 'z';   // default pull axis (to be confirmed visually)
-let drawerOpenDist = -14;   // negative = pull toward camera (tune after visual check)
-
-const loadingFill = document.getElementById('loading-fill');
-const loadingScreen = document.getElementById('loading-screen');
-
-const loader = new GLTFLoader();
-loader.load(
-  './rusty_filing_cabinet.glb',
-
-  // onLoad
-  (gltf) => {
-    cabinetScene = gltf.scene;
-    scene.add(cabinetScene);
-
-    // Apply DoubleSide to all materials — critical for viewing interior surfaces
-    cabinetScene.traverse((child) => {
-      if (child.isMesh) {
-        if (Array.isArray(child.material)) {
-          child.material.forEach((mat) => { mat.side = THREE.DoubleSide; });
-        } else {
-          child.material.side = THREE.DoubleSide;
-        }
-      }
-    });
-
-    // Find animation target
-    mainDrawer = cabinetScene.getObjectByName('drawer_04_low');
-
-    // Auto-fit camera to model bounds
-    fitCameraToModel(cabinetScene);
-
-    // Initialize scroll animation now that model is loaded
-    initScrollAnimation();
-
-    // Reveal canvas + hide loading screen
-    canvas.classList.add('loaded');
-    setTimeout(() => {
-      loadingScreen.classList.add('hidden');
-      document.getElementById('site-footer').classList.add('visible');
-      // Animate about overlay in
-      revealAboutOverlay();
-    }, 600);
-  },
-
-  // onProgress
-  (progress) => {
-    if (progress.lengthComputable) {
-      const pct = (progress.loaded / progress.total) * 100;
-      loadingFill.style.width = pct + '%';
-    }
-  },
-
-  // onError
-  (error) => {
-    console.error('GLB load error:', error);
-    // Graceful fallback — show overlay without 3D
+window.addEventListener('load', () => {
+  setTimeout(() => {
     loadingScreen.classList.add('hidden');
-    canvas.style.display = 'none';
-    document.getElementById('darkness').style.opacity = '0';
-    document.getElementById('about-overlay').style.opacity = '1';
-    document.getElementById('about-overlay').style.pointerEvents = 'auto';
+    // Remove from DOM after fade transition completes
+    setTimeout(() => { loadingScreen.style.display = 'none'; }, 700);
+    document.getElementById('site-footer').classList.add('visible');
     revealAboutOverlay();
-  }
-);
+    initScrollAnimation();
+  }, 400);
+});
 
 // ─────────────────────────────────────────────
-// CAMERA FIT
-// ─────────────────────────────────────────────
-function fitCameraToModel(model) {
-  const box    = new THREE.Box3().setFromObject(model);
-  const center = box.getCenter(new THREE.Vector3());
-  const size   = box.getSize(new THREE.Vector3());
-
-  // ── CAMERA ──────────────────────────────────────────────────────
-  // Position: inside the cabinet, near the front face, slightly below center.
-  // We want to look UP and INWARD so the rusty ceiling is dramatic above us,
-  // and we can see into the dark interior (the "closed drawer" feel).
-  const camZ = box.min.z + size.z * 0.08;   // just inside the front face
-  const camY = center.y - size.y * 0.15;    // slightly below center (looking up)
-  camera.position.set(center.x, camY, camZ);
-  camera.lookAt(center.x, center.y + size.y * 0.18, center.z + size.z * 0.4);
-
-  // ── LIGHTS ──────────────────────────────────────────────────────
-  // Front rect light: positioned OUTSIDE the front face, shining INTO the cabinet.
-  // When the drawer is pulled out, this light floods straight through the opening.
-  const lightZ = box.min.z - size.z * 0.25;  // in front of the cabinet face
-  rectLight.position.set(center.x, center.y, lightZ);
-  rectLight.width  = size.x * 1.4;
-  rectLight.height = size.y * 1.2;
-  rectLight.lookAt(center.x, center.y, center.z);
-
-  // Spot light from same front direction — for the dramatic light-cone effect
-  spotLight.position.set(center.x, center.y + size.y * 0.1, lightZ);
-  spotLight.target.position.set(center.x, center.y, center.z + size.z * 0.3);
-  spotLight.target.updateMatrixWorld();
-  spotLight.distance = size.z * 4;
-
-  // Interior fill light — warm glow from slightly above center inside the cabinet
-  innerLight.position.set(center.x, center.y + size.y * 0.15, center.z);
-  innerLight.distance = size.z * 3;
-
-  // ── FOG ─────────────────────────────────────────────────────────
-  // Calibrate fog so it fades out at roughly the back wall distance
-  scene.fog.density = 0.6 / size.z;
-
-  // ── NEAR/FAR CLIP ───────────────────────────────────────────────
-  camera.near = size.z * 0.002;
-  camera.far  = size.z * 10;
-  camera.updateProjectionMatrix();
-
-  // Store for scroll animation
-  window._cabinetData = { box, center, size };
-}
-
-// ─────────────────────────────────────────────
-// GSAP SCROLL ANIMATION
-// ─────────────────────────────────────────────
-const darkness      = document.getElementById('darkness');
-const aboutOverlay  = document.getElementById('about-overlay');
-const folderUI      = document.getElementById('folder-ui');
-
-function initScrollAnimation() {
-  if (!cabinetScene) return;
-
-  const { center, size } = window._cabinetData || {};
-  drawerOpenDist = size ? -(size.z * 0.75) : -14;
-
-  // Store original drawer position for animation reference
-  if (mainDrawer) {
-    mainDrawer.userData.originalPos = mainDrawer.position.clone();
-  }
-
-  ScrollTrigger.create({
-    trigger: '#scroll-space',
-    start: 'top top',
-    end: 'bottom bottom',
-    scrub: 1.5,   // laggy for that physical drag feel
-    onUpdate: (self) => {
-      const p = self.progress; // 0 → 1
-
-      // ── PHASE 1: 0–0.25 → darkness fades, about overlay stays ──
-      const darkOpacity = p < 0.25 ? 1 - (p / 0.25) : 0;
-      darkness.style.opacity = darkOpacity;
-
-      // ── PHASE 2: 0.15–0.45 → about overlay fades ──
-      const aboutOpacity = p < 0.15 ? 1 : p < 0.45 ? 1 - ((p - 0.15) / 0.30) : 0;
-      aboutOverlay.style.opacity = aboutOpacity;
-      aboutOverlay.style.pointerEvents = aboutOpacity > 0.1 ? 'auto' : 'none';
-
-      // ── DRAWER ANIMATION: 0.1 → 0.9 → pulls open ──
-      if (mainDrawer && mainDrawer.userData.originalPos) {
-        const drawerProgress = Math.max(0, Math.min(1, (p - 0.1) / 0.8));
-        const eased = easeOutCubic(drawerProgress);
-        const offset = eased * drawerOpenDist;
-
-        // Apply offset on the correct axis (determined by inspection)
-        const orig = mainDrawer.userData.originalPos;
-        if (drawerAxis === 'z') {
-          mainDrawer.position.z = orig.z + offset;
-        } else if (drawerAxis === 'x') {
-          mainDrawer.position.x = orig.x + offset;
-        } else {
-          mainDrawer.position.y = orig.y + offset;
-        }
-      }
-
-      // ── LIGHTING: 0.15 → 1.0 → warm light floods in ──
-      const lightProgress = Math.max(0, Math.min(1, (p - 0.15) / 0.85));
-      const lightEased = easeOutQuad(lightProgress);
-      const { size } = window._cabinetData || { size: { z: 100 } };
-
-      renderer.toneMappingExposure = 0.02 + lightEased * 1.38;
-      rectLight.intensity          = lightEased * 12;
-      spotLight.intensity          = lightEased * 8;
-      innerLight.intensity         = lightEased * 6;
-      ambientLight.intensity       = 0.08 + lightEased * 1.2;
-      scene.fog.density            = (0.6 / size.z) * (1 - lightEased * 0.7);
-
-      // ── FOLDER UI: appears at 85%+ ──
-      if (p >= 0.85) {
-        folderUI.classList.add('visible');
-      } else {
-        folderUI.classList.remove('visible');
-      }
-    },
-  });
-}
-
-// ─────────────────────────────────────────────
-// EASING FUNCTIONS
-// ─────────────────────────────────────────────
-function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-function easeOutQuad(t)  { return 1 - (1 - t) * (1 - t); }
-
-// ─────────────────────────────────────────────
-// ABOUT OVERLAY REVEAL ANIMATION
+// ABOUT OVERLAY REVEAL
 // ─────────────────────────────────────────────
 function revealAboutOverlay() {
   const tl = gsap.timeline({ delay: 0.3 });
@@ -368,31 +149,174 @@ function revealAboutOverlay() {
 }
 
 // ─────────────────────────────────────────────
+// GSAP SCROLL ANIMATION — the core experience
+// ─────────────────────────────────────────────
+function initScrollAnimation() {
+  // Pre-cache static values for the ray animation
+  const rayAngles = [-15, -6, 3, 11, 18];
+  const rayDelays = [0, 0.06, 0.02, 0.08, 0.04];
+  const folders   = drawerFiles.children;
+  const footer    = document.getElementById('site-footer');
+
+  // Track last values to skip redundant DOM writes (a big perf win)
+  let lastDarkOp = -1, lastAboutOp = -1, lastZ = -1;
+  let lastDrawerOp = -1, lastGlowOp = -1, lastWallGlow = -1;
+  let lastFileOp = -1;
+
+  // Main scroll timeline
+  ScrollTrigger.create({
+    trigger: '#scroll-space',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1.5,
+    onUpdate: (self) => {
+      const p = self.progress; // 0 → 1
+
+      // ── DARKNESS: 0 → 0.25 fades out ──
+      const darkOpacity = p < 0.25 ? 1 - (p / 0.25) : 0;
+      const darkRounded = Math.round(darkOpacity * 100) / 100;
+      if (darkRounded !== lastDarkOp) {
+        darkness.style.opacity = darkRounded;
+        lastDarkOp = darkRounded;
+      }
+
+      // ── ABOUT OVERLAY: fades between 0.1 → 0.4 ──
+      const aboutOpacity = p < 0.1 ? 1 : p < 0.4 ? 1 - ((p - 0.1) / 0.3) : 0;
+      const aboutRounded = Math.round(aboutOpacity * 100) / 100;
+      if (aboutRounded !== lastAboutOp) {
+        aboutOverlay.style.opacity = aboutRounded;
+        if (aboutRounded <= 0.01) {
+          aboutOverlay.style.visibility = 'hidden';
+        } else {
+          aboutOverlay.style.visibility = '';
+          aboutOverlay.style.pointerEvents = aboutRounded > 0.1 ? 'auto' : 'none';
+        }
+        lastAboutOp = aboutRounded;
+      }
+
+      // ── CABINET SCENE: zoom out (translateZ from startZ → 0) ──
+      const zoomProgress = easeOutQuart(Math.min(1, p / 0.9));
+      const currentZ = Math.round(startZ * (1 - zoomProgress));
+      if (currentZ !== lastZ) {
+        cabinetScene.style.transform = `translateZ(${currentZ}px)`;
+        lastZ = currentZ;
+      }
+
+      // ── DRAWER FACE: slides toward camera and fades ──
+      const drawerProg = clamp((p - 0.03) / 0.45, 0, 1);
+      const drawerEased = easeOutCubic(drawerProg);
+      const drawerZ = Math.round(drawerEased * 400);
+      const drawerOpacity = Math.round((drawerProg < 0.6 ? 1 : 1 - ((drawerProg - 0.6) / 0.4)) * 100) / 100;
+      if (drawerOpacity !== lastDrawerOp) {
+        drawerFace.style.transform = `translateZ(${drawerZ}px)`;
+        drawerFace.style.opacity = drawerOpacity;
+        drawerFace.style.visibility = drawerOpacity <= 0.01 ? 'hidden' : '';
+        lastDrawerOp = drawerOpacity;
+      }
+
+      // ── LIGHT GLOW: expands from thin line to full warm glow ──
+      const lightProg = clamp((p - 0.05) / 0.55, 0, 1);
+      const lightEased = easeOutQuad(lightProg);
+      const glowOpRounded = Math.round(lightEased * 85) / 100;
+      if (glowOpRounded !== lastGlowOp) {
+        const glowScaleY = 0.01 + lightEased * 0.99;
+        lightGlow.style.transform = `translate(-50%, -48%) scaleY(${glowScaleY})`;
+        lightGlow.style.opacity = glowOpRounded;
+        lastGlowOp = glowOpRounded;
+      }
+
+      // ── LIGHT RAYS: fan out (only update when visible) ──
+      const rayProg = clamp((p - 0.12) / 0.5, 0, 1);
+      if (rayProg > 0.001 || lastGlowOp > 0) {
+        const rayEased = easeOutCubic(rayProg);
+        lightRays.style.opacity = Math.round(rayEased * 80) / 100;
+        for (let i = 0; i < rays.length; i++) {
+          const thisProgress = clamp((rayProg - rayDelays[i]) / (1 - rayDelays[i]), 0, 1);
+          const thisEased = easeOutCubic(thisProgress);
+          rays[i].style.transform = `rotate(${rayAngles[i]}deg) scaleX(${thisEased})`;
+          rays[i].style.opacity = thisEased;
+        }
+      }
+
+      // ── LIGHT HAZE: warm ambient overlay ──
+      const hazeProg = clamp((p - 0.15) / 0.55, 0, 1);
+      lightHaze.style.opacity = Math.round(easeOutQuad(hazeProg) * 70) / 100;
+
+      // ── INTERIOR GLOW — update specific elements directly (NOT :root) ──
+      const wallGlowProg = clamp((p - 0.2) / 0.5, 0, 1);
+      const wallGlowEased = easeOutQuad(wallGlowProg);
+      const wallGlowRounded = Math.round(wallGlowEased * 100) / 100;
+
+      if (wallGlowRounded !== lastWallGlow) {
+        // Interior ::after glow — use stylesheet injection (only updates when value changes)
+        interiorAfterStyle.textContent = `.drawer-interior::after { opacity: ${wallGlowRounded} !important; }`;
+
+        // Closed drawer reflections
+        if (drawerTop1) drawerTop1.style.setProperty('--glow', wallGlowRounded);
+        if (drawerBottom1) drawerBottom1.style.setProperty('--glow', wallGlowRounded);
+
+        // Use a simple opacity fade on the interior instead of rewriting box-shadow every frame
+        // The initial heavy shadow is in CSS, we just lighten it via reduced opacity overlay
+        if (drawerInterior) {
+          drawerInterior.style.opacity = 1 - wallGlowEased * 0.15;
+        }
+
+        lastWallGlow = wallGlowRounded;
+      }
+
+      // ── DRAWER FILES: appear at 45%+ ──
+      const fileProg = clamp((p - 0.45) / 0.35, 0, 1);
+      const fileRounded = Math.round(easeOutCubic(fileProg) * 100) / 100;
+      if (fileRounded !== lastFileOp) {
+        drawerFiles.style.opacity = fileRounded;
+        drawerFiles.style.pointerEvents = fileProg > 0.5 ? 'auto' : 'none';
+
+        // Stagger individual folders
+        for (let i = 0; i < folders.length; i++) {
+          const folderDelay = i * 0.06;
+          const folderProg = clamp((fileProg - folderDelay) / (1 - folderDelay * folders.length), 0, 1);
+          const folderEased = easeOutCubic(folderProg);
+          folders[i].style.opacity = folderEased;
+          folders[i].style.transform = `translateY(${(1 - folderEased) * 12 + (i % 2 === 0 ? 2 : -1)}px)`;
+        }
+        lastFileOp = fileRounded;
+      }
+
+      // ── FOOTER: appears at 85%+ ──
+      const footerProg = clamp((p - 0.85) / 0.15, 0, 1);
+      footer.style.opacity = Math.round(footerProg * 100) / 100;
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// EASING & UTILITY
+// ─────────────────────────────────────────────
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeOutQuad(t)  { return 1 - (1 - t) * (1 - t); }
+function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+// ─────────────────────────────────────────────
 // PROJECT PANEL
 // ─────────────────────────────────────────────
-const panel      = document.getElementById('project-panel');
-const panelClose = document.getElementById('panel-close');
 let activeFolder = null;
-let activeFolderOrigPos = null;
 
 function openProject(index) {
   const proj = PROJECTS[index];
   if (!proj) return;
 
-  // Populate panel
   document.getElementById('panel-number').textContent      = proj.number;
   document.getElementById('panel-title').textContent       = proj.title;
   document.getElementById('panel-description').textContent = proj.description;
 
   // Tags
-  const tagsEl = document.getElementById('panel-tags');
-  tagsEl.innerHTML = proj.tags
+  document.getElementById('panel-tags').innerHTML = proj.tags
     .map((t) => `<span class="panel-tag">${t}</span>`)
     .join('');
 
   // Links
-  const linksEl = document.getElementById('panel-links');
-  linksEl.innerHTML = proj.links
+  document.getElementById('panel-links').innerHTML = proj.links
     .map((l) => {
       const icon = l.icon === 'github'
         ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>`
@@ -402,94 +326,76 @@ function openProject(index) {
     .join('');
 
   // Meta
-  const metaEl = document.getElementById('panel-meta');
-  metaEl.innerHTML = proj.meta
+  document.getElementById('panel-meta').innerHTML = proj.meta
     .map((m) => `<span>${m}</span>`)
     .join('');
 
-  // Open panel
+  // Show dim overlay + open panel
+  sceneDim.classList.add('active');
   panel.classList.add('open');
   panel.setAttribute('aria-hidden', 'false');
   panel.scrollTop = 0;
   panelClose.focus();
 
-  // Disable lenis while panel is open
   lenis.stop();
 }
 
 function closeProject() {
   panel.classList.remove('open');
   panel.setAttribute('aria-hidden', 'true');
+  sceneDim.classList.remove('active');
+
+  // Reset active folder
+  if (activeFolder) {
+    activeFolder.classList.remove('active');
+    gsap.to(activeFolder, {
+      z: 0,
+      scale: 1,
+      duration: 0.3,
+      ease: 'power2.inOut',
+    });
+  }
   activeFolder = null;
   lenis.start();
 }
 
-// Panel close button
 panelClose.addEventListener('click', closeProject);
+sceneDim.addEventListener('click', closeProject);
 
-// Close on Escape
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && panel.classList.contains('open')) closeProject();
 });
 
-// Folder tab click handlers
-document.querySelectorAll('.folder-tab').forEach((tab) => {
-  tab.addEventListener('click', () => {
-    const index = parseInt(tab.dataset.project, 10);
+// ─────────────────────────────────────────────
+// FOLDER CLICK HANDLERS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.file-folder').forEach((folder) => {
+  folder.addEventListener('click', () => {
+    const index = parseInt(folder.dataset.project, 10);
 
-    // Visual: deselect all, select clicked
-    document.querySelectorAll('.folder-tab').forEach((t) => t.classList.remove('active'));
-    tab.classList.add('active');
-    activeFolder = tab;
+    // Deselect previous
+    document.querySelectorAll('.file-folder').forEach((f) => f.classList.remove('active'));
 
-    openProject(index);
+    // Animate this folder toward camera
+    folder.classList.add('active');
+    activeFolder = folder;
+
+    gsap.to(folder, {
+      z: 80,
+      scale: 1.15,
+      duration: 0.35,
+      ease: 'power2.out',
+      onComplete: () => openProject(index),
+    });
   });
 });
-
-// ─────────────────────────────────────────────
-// RENDER LOOP
-// ─────────────────────────────────────────────
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-
-animate();
 
 // ─────────────────────────────────────────────
 // RESIZE HANDLER
 // ─────────────────────────────────────────────
 window.addEventListener('resize', () => {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Update perspective-related values if needed
+  ScrollTrigger.refresh();
 });
 
-// ─────────────────────────────────────────────
-// MOBILE FALLBACK
-// (If WebGL is not supported or fails, show static layout)
-// ─────────────────────────────────────────────
-function checkWebGL() {
-  try {
-    const testCanvas = document.createElement('canvas');
-    return !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl'));
-  } catch (e) {
-    return false;
-  }
-}
-
-if (!checkWebGL()) {
-  canvas.style.display = 'none';
-  loadingScreen.classList.add('hidden');
-  document.getElementById('darkness').style.opacity = '0';
-  document.getElementById('about-overlay').style.opacity = '1';
-  document.getElementById('about-overlay').style.pointerEvents = 'auto';
-  document.getElementById('folder-ui').classList.add('visible');
-  revealAboutOverlay();
-  console.warn('[FALLBACK] WebGL not available — showing static layout');
-}
+// (Interior glow is now handled via interiorAfterStyle element, updated in scroll handler)

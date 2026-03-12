@@ -17,16 +17,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 
-  <!-- Three.js importmap -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-    }
-  }
-  </script>
-
   <!-- GSAP -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
@@ -38,14 +28,116 @@
 </head>
 <body>
 
-  <!-- THREE.JS CANVAS — the filing cabinet world -->
-  <canvas id="three-canvas" aria-hidden="true"></canvas>
-
   <!-- SCROLL SPACE — gives GSAP room to scrub (500vh) -->
   <div id="scroll-space" aria-hidden="true"></div>
 
   <!-- DARKNESS OVERLAY — pitch black at start, fades on scroll -->
   <div id="darkness" aria-hidden="true"></div>
+
+  <!-- LIGHT FLOOD — warm light pouring out of the drawer -->
+  <div id="light-flood" aria-hidden="true">
+    <div class="light-glow"></div>
+    <div class="light-rays">
+      <div class="ray ray-1"></div>
+      <div class="ray ray-2"></div>
+      <div class="ray ray-3"></div>
+      <div class="ray ray-4"></div>
+      <div class="ray ray-5"></div>
+    </div>
+    <div class="light-haze"></div>
+  </div>
+
+  <!-- CSS 3D FILING CABINET SCENE -->
+  <div id="scene-viewport">
+    <div id="cabinet-scene">
+
+      <!-- Cabinet body -->
+      <div class="cabinet-body">
+        <!-- Top frame -->
+        <div class="cabinet-frame frame-top"></div>
+
+        <!-- Closed drawer above (2) -->
+        <div class="drawer-front closed drawer-top-2">
+          <div class="drawer-handle"></div>
+          <div class="drawer-label-holder"></div>
+        </div>
+        <div class="drawer-front closed drawer-top-1">
+          <div class="drawer-handle"></div>
+          <div class="drawer-label-holder"></div>
+        </div>
+
+        <!-- THE OPEN DRAWER — the star of the show -->
+        <div class="drawer-open">
+          <!-- The front face that slides toward camera -->
+          <div class="drawer-face" id="drawer-face">
+            <div class="drawer-handle"></div>
+            <div class="drawer-label-holder"></div>
+          </div>
+
+          <!-- Interior cavity — 3D box -->
+          <div class="drawer-interior">
+            <div class="drawer-wall wall-back"></div>
+            <div class="drawer-wall wall-left"></div>
+            <div class="drawer-wall wall-right"></div>
+            <div class="drawer-wall wall-bottom"></div>
+
+            <!-- Hanging file rail (left and right) -->
+            <div class="file-rail rail-left"></div>
+            <div class="file-rail rail-right"></div>
+
+            <!-- File folders inside the drawer -->
+            <div class="drawer-files">
+              <button class="file-folder" data-project="0" aria-label="View project: Autonomous Drone">
+                <div class="folder-tab-label">
+                  <span class="folder-num">01</span>
+                  <span class="folder-name">Autonomous Drone</span>
+                </div>
+                <div class="folder-body"></div>
+              </button>
+
+              <button class="file-folder" data-project="1" aria-label="View project: Signal Processor">
+                <div class="folder-tab-label">
+                  <span class="folder-num">02</span>
+                  <span class="folder-name">Signal Processor</span>
+                </div>
+                <div class="folder-body"></div>
+              </button>
+
+              <button class="file-folder" data-project="2" aria-label="View project: ML Research Tool">
+                <div class="folder-tab-label">
+                  <span class="folder-num">03</span>
+                  <span class="folder-name">ML Research Tool</span>
+                </div>
+                <div class="folder-body"></div>
+              </button>
+
+              <button class="file-folder" data-project="3" aria-label="View project: This Website">
+                <div class="folder-tab-label">
+                  <span class="folder-num">04</span>
+                  <span class="folder-name">This Website</span>
+                </div>
+                <div class="folder-body"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closed drawer below -->
+        <div class="drawer-front closed drawer-bottom-1">
+          <div class="drawer-handle"></div>
+          <div class="drawer-label-holder"></div>
+        </div>
+
+        <!-- Bottom frame -->
+        <div class="cabinet-frame frame-bottom"></div>
+
+        <!-- Side frames -->
+        <div class="cabinet-frame frame-left"></div>
+        <div class="cabinet-frame frame-right"></div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ABOUT OVERLAY — visible on dark landing state -->
   <div id="about-overlay" role="main">
@@ -98,54 +190,6 @@
     </div>
   </div>
 
-  <!-- FOLDER UI — appears when drawer is open -->
-  <nav id="folder-ui" aria-label="Project folders">
-    <div class="folder-tabs-label">— select a file —</div>
-    <div class="folder-tabs" role="list">
-
-      <button class="folder-tab" data-project="0" role="listitem" aria-label="View project: Autonomous Drone">
-        <div class="folder-tab-top">
-          <span class="tab-number">01</span>
-        </div>
-        <div class="folder-tab-body">
-          <span class="folder-label">Autonomous Drone</span>
-          <span class="folder-tag">Embedded · Control</span>
-        </div>
-      </button>
-
-      <button class="folder-tab" data-project="1" role="listitem" aria-label="View project: Signal Processor">
-        <div class="folder-tab-top">
-          <span class="tab-number">02</span>
-        </div>
-        <div class="folder-tab-body">
-          <span class="folder-label">Signal Processor</span>
-          <span class="folder-tag">DSP · FPGA</span>
-        </div>
-      </button>
-
-      <button class="folder-tab" data-project="2" role="listitem" aria-label="View project: ML Research Tool">
-        <div class="folder-tab-top">
-          <span class="tab-number">03</span>
-        </div>
-        <div class="folder-tab-body">
-          <span class="folder-label">ML Research Tool</span>
-          <span class="folder-tag">Python · PyTorch</span>
-        </div>
-      </button>
-
-      <button class="folder-tab" data-project="3" role="listitem" aria-label="View project: This Website">
-        <div class="folder-tab-top">
-          <span class="tab-number">04</span>
-        </div>
-        <div class="folder-tab-body">
-          <span class="folder-label">This Website</span>
-          <span class="folder-tag">Three.js · WebGL</span>
-        </div>
-      </button>
-
-    </div>
-  </nav>
-
   <!-- PROJECT PANEL — slides in from right on folder click -->
   <aside id="project-panel" role="dialog" aria-modal="true" aria-label="Project details" aria-hidden="true">
     <button id="panel-close" aria-label="Close project details">
@@ -158,31 +202,30 @@
     <div class="panel-content">
       <span class="panel-number" id="panel-number">01</span>
       <h2 class="panel-title" id="panel-title">Project Title</h2>
-      <p class="panel-description" id="panel-description">Loading…</p>
+      <p class="panel-description" id="panel-description">Loading...</p>
       <div class="panel-tags" id="panel-tags"></div>
       <div class="panel-links" id="panel-links"></div>
       <div class="panel-meta" id="panel-meta"></div>
     </div>
   </aside>
 
+  <!-- SCENE DIM OVERLAY — dims scene when panel is open -->
+  <div id="scene-dim" aria-hidden="true"></div>
+
   <!-- LOADING SCREEN -->
   <div id="loading-screen" aria-live="polite">
     <div class="loading-inner">
-      <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+      <div class="loading-spinner"></div>
       <p class="loading-text">Opening the drawer<span class="loading-dots">...</span></p>
     </div>
   </div>
 
   <!-- FOOTER -->
   <footer id="site-footer">
-    <a href="https://skfb.ly/oKoNK" target="_blank" rel="noopener" class="footer-credit">
-      3D: "Rusty Filing Cabinet" by Amiel Goco (CC BY 4.0)
-    </a>
-    <span class="footer-copy">© 2026 Fengyou Liu · Built with ☕</span>
+    <span class="footer-copy">&copy; 2026 Fengyou Liu</span>
   </footer>
 
-  <!-- Main JS (ES module — uses importmap for Three.js) -->
-  <script type="module" src="script.js"></script>
+  <script src="script.js" defer></script>
 
 </body>
 </html>
