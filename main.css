@@ -1,54 +1,20 @@
 /* ════════════════════════════════════════════════════════════
    FENGYOU.ORG — Main Stylesheet
-   Design: Immersive CSS 3D Filing Cabinet Experience
-   Palette: Warm Industrial Dark (rust, cream, dark metal)
+   Simple landing page: dark background, name, bio, links
    ════════════════════════════════════════════════════════════ */
 
 /* ── DESIGN TOKENS ─────────────────────────────────────── */
 :root {
-  --bg:               #0F0C09;
-  --bg-panel:         #1A1410;
-  --bg-elevated:      #231A14;
+  --bg:            #0F0C09;
+  --text:          #F2EDE4;
+  --text-muted:    #A89880;
+  --text-faint:    #6B5E52;
+  --accent:        #C4823A;
+  --accent-light:  #E09A4A;
+  --accent-deep:   #A06828;
 
-  --text:             #F2EDE4;
-  --text-muted:       #A89880;
-  --text-faint:       #6B5E52;
-
-  --accent:           #C4823A;
-  --accent-light:     #E09A4A;
-  --accent-deep:      #A06828;
-
-  --folder-manila:    #C4A882;
-  --folder-tab:       #B8976A;
-  --folder-hover:     #D4B892;
-  --metal-dark:       #2A2420;
-  --metal-mid:        #3D3028;
-  --metal-light:      #5A4A3A;
-
-  --border:           rgba(196, 130, 58, 0.15);
-  --border-strong:    rgba(196, 130, 58, 0.35);
-
-  --font-display:     'Space Grotesk', sans-serif;
-  --font-body:        'Inter', sans-serif;
-
-  --panel-width:      440px;
-
-  /* Cabinet dimensions */
-  --cab-width:        min(520px, 80vw);
-  --cab-height:       min(700px, 88vh);
-  --frame-w:          6px;
-  --handle-w:         60px;
-  --handle-h:         10px;
-
-  /* Scene perspective */
-  --perspective:      900px;
-  --scene-z:          800px; /* start value: zoomed in */
-
-  /* Light color */
-  --light-warm:       rgba(255, 210, 140, 0.6);
-  --light-hot:        rgba(255, 190, 100, 0.9);
-
-  /* (wall glow is now controlled via direct JS style updates for performance) */
+  --font-display:  'Space Grotesk', sans-serif;
+  --font-body:     'Inter', sans-serif;
 }
 
 /* ── RESET ──────────────────────────────────────────────── */
@@ -58,702 +24,30 @@
   padding: 0;
 }
 
-html {
-  scroll-behavior: auto;
-  font-size: 16px;
-}
+html { font-size: 16px; }
 
 body {
-  background: #000;
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   line-height: 1.65;
   overflow-x: hidden;
-}
-
-/* Subtle vignette around the edges to focus attention on center */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 75% 70% at 50% 50%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.4) 100%
-  );
+  min-height: 100vh;
 }
 
 a { color: inherit; text-decoration: none; }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-family: inherit;
-  color: inherit;
-}
-
-/* ── SCROLL SPACE ───────────────────────────────────────── */
-#scroll-space {
-  position: relative;
-  height: 500vh;
-  width: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* ── DARKNESS OVERLAY ───────────────────────────────────── */
-#darkness {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 10;
-  pointer-events: none;
-  will-change: opacity;
-}
-
-/* ── LIGHT FLOOD ────────────────────────────────────────── */
-#light-flood {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.light-glow {
-  position: absolute;
-  top: 48%;
-  left: 50%;
-  width: 120vw;
-  height: 120vh;
-  transform: translate(-50%, -50%) scaleY(0.01);
-  opacity: 0;
-  background: radial-gradient(
-    ellipse 55% 45% at 50% 50%,
-    rgba(255, 195, 100, 0.65) 0%,
-    rgba(230, 160, 60, 0.35) 25%,
-    rgba(200, 130, 50, 0.18) 45%,
-    rgba(160, 100, 40, 0.06) 65%,
-    transparent 80%
-  );
-  will-change: transform, opacity;
-}
-
-.light-rays {
-  position: absolute;
-  top: 48%;
-  left: 50%;
-  width: 100vw;
-  height: 100vh;
-  transform: translate(-50%, -50%);
-  /* NO filter:blur — it's the #1 GPU killer at large viewports.
-     Softness is achieved via wider ray height + gradient falloff instead */
-  opacity: 0;
-  will-change: opacity;
-}
-
-.ray {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 450px;
-  height: 12px;   /* wider to look soft without blur */
-  background: radial-gradient(
-    ellipse 100% 100% at 0% 50%,
-    rgba(255, 210, 150, 0.7) 0%,
-    rgba(255, 185, 100, 0.35) 25%,
-    rgba(255, 160, 80, 0.12) 55%,
-    transparent 100%
-  );
-  border-radius: 6px;
-  transform-origin: 0% 50%;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-.ray-1 { transform: rotate(-15deg) scaleX(0); }
-.ray-2 { transform: rotate(-6deg) scaleX(0); }
-.ray-3 { transform: rotate(3deg) scaleX(0); }
-.ray-4 { transform: rotate(11deg) scaleX(0); }
-.ray-5 { transform: rotate(18deg) scaleX(0); }
-
-.light-haze {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 48%,
-    rgba(255, 200, 120, 0.15) 0%,
-    rgba(200, 150, 80, 0.06) 40%,
-    transparent 65%
-  );
-  opacity: 0;
-}
-
-/* ── SCENE VIEWPORT (CSS 3D perspective origin) ─────────── */
-#scene-viewport {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
+/* ── LANDING ────────────────────────────────────────────── */
+#landing {
+  min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  perspective: var(--perspective);
-  perspective-origin: 50% 48%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-#cabinet-scene {
-  position: relative;
-  width: var(--cab-width);
-  height: var(--cab-height);
-  transform-style: preserve-3d;
-  transform: translateZ(var(--scene-z));
-  will-change: transform;
-}
-
-/* ── CABINET BODY ───────────────────────────────────────── */
-.cabinet-body {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-}
-
-/* ── METAL TEXTURE (shared via mixin-like class usage) ──── */
-/* Applied directly to elements that need it */
-
-/* ── DRAWER FRONT (closed drawers + open drawer face) ───── */
-.drawer-front,
-.drawer-face {
-  position: absolute;
-  left: var(--frame-w);
-  right: var(--frame-w);
-  /* Rust metal texture */
-  background:
-    /* Grain */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%232A2420'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23302820' opacity='0.5'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23352D25' opacity='0.4'/%3E%3C/svg%3E"),
-    /* Brushed metal streaks */
-    repeating-linear-gradient(
-      93deg,
-      transparent,
-      transparent 2px,
-      rgba(255,255,255,0.02) 2px,
-      rgba(255,255,255,0.02) 3px
-    ),
-    /* Rust patches */
-    radial-gradient(ellipse 40% 60% at 20% 30%, rgba(139, 69, 19, 0.3) 0%, transparent 70%),
-    radial-gradient(ellipse 30% 40% at 75% 60%, rgba(160, 82, 45, 0.25) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(107, 52, 16, 0.2) 0%, transparent 70%),
-    /* Base metal */
-    linear-gradient(175deg, #3D3028, #2E2218, #3A2E24, #2A2420);
-  border: 1px solid rgba(80, 60, 40, 0.5);
-  border-top-color: rgba(100, 80, 60, 0.4);
-  border-bottom-color: rgba(40, 30, 20, 0.6);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
-  gap: 8px;
-}
-
-/* Position closed drawers — use % of cabinet height for responsive fit */
-.drawer-top-2 {
-  top: 1%;
-  height: 16%;
-}
-
-.drawer-top-1 {
-  top: 18%;
-  height: 16%;
-}
-
-.drawer-bottom-1 {
-  bottom: 1%;
-  height: 16%;
-}
-
-/* Subtle warm light reflection on closed drawer surfaces near the opening */
-.drawer-top-1::after,
-.drawer-bottom-1::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: var(--glow, 0);
-  will-change: opacity;
-}
-.drawer-top-1::after {
-  background: linear-gradient(to top, rgba(255, 180, 80, 0.08), transparent 60%);
-}
-.drawer-bottom-1::after {
-  background: linear-gradient(to bottom, rgba(255, 180, 80, 0.06), transparent 50%);
-}
-
-/* ── DRAWER HANDLE ──────────────────────────────────────── */
-.drawer-handle {
-  width: var(--handle-w);
-  height: var(--handle-h);
-  border-radius: 3px;
-  background: linear-gradient(
-    to bottom,
-    #6A5A4A 0%,
-    #4A3C30 30%,
-    #3A2E24 50%,
-    #4A3C30 70%,
-    #6A5A4A 100%
-  );
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-  position: relative;
-}
-
-/* Label holder below handle */
-.drawer-label-holder {
-  width: 50px;
-  height: 16px;
-  border: 1px solid rgba(80, 60, 40, 0.5);
-  border-radius: 2px;
-  background: linear-gradient(to bottom, rgba(60, 50, 40, 0.4), rgba(40, 30, 20, 0.6));
-}
-
-/* ── OPEN DRAWER ASSEMBLY ───────────────────────────────── */
-.drawer-open {
-  position: absolute;
-  left: var(--frame-w);
-  right: var(--frame-w);
-  top: 35%;
-  bottom: 18%;  /* space for bottom drawer */
-  transform-style: preserve-3d;
-  z-index: 1;
-  border-radius: 2px;
-}
-
-/* The sliding front face */
-.drawer-face {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 35%; /* proportional to the open area */
-  z-index: 2;
-  transform: translateZ(0px);
-  will-change: transform, opacity;
-  transform-style: preserve-3d;
-}
-
-/* ── DRAWER INTERIOR — 2.5D depth illusion ─────────────── */
-.drawer-interior {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 0;
-  overflow: visible;
-  border-radius: 2px;
-
-  /* Dark recessed interior — warm dark metal tones */
-  background:
-    /* Back wall gradient - darker at top (ceiling), warmer at bottom (catch light) */
-    linear-gradient(
-      to bottom,
-      #0A0806 0%,
-      #0E0C0A 15%,
-      #141110 35%,
-      #1A1612 60%,
-      #221C16 80%,
-      #2A2218 100%
-    );
-
-  /* Deep inset shadow on all sides = depth illusion */
-  box-shadow:
-    inset 0 20px 40px -5px rgba(0, 0, 0, 0.9),
-    inset 0 -12px 30px -5px rgba(0, 0, 0, 0.6),
-    inset 20px 0 30px -5px rgba(0, 0, 0, 0.7),
-    inset -20px 0 30px -5px rgba(0, 0, 0, 0.7),
-    inset 0 0 80px rgba(0, 0, 0, 0.5);
-}
-
-/* Subtle scratches on the interior floor for realism */
-.drawer-interior::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 8px;
-  height: 50%;
-  background:
-    /* Floor scratches */
-    repeating-linear-gradient(
-      85deg,
-      transparent,
-      transparent 30px,
-      rgba(80, 60, 40, 0.12) 30px,
-      rgba(80, 60, 40, 0.12) 31px
-    ),
-    repeating-linear-gradient(
-      95deg,
-      transparent,
-      transparent 45px,
-      rgba(70, 55, 35, 0.08) 45px,
-      rgba(70, 55, 35, 0.08) 46px
-    ),
-    /* Warm ambient light on floor */
-    radial-gradient(
-      ellipse 90% 80% at 50% 100%,
-      rgba(255, 180, 80, 0.25) 0%,
-      rgba(200, 140, 60, 0.12) 40%,
-      transparent 70%
-    );
-  mask-image: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
-  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Interior warm light glow overlay (animated via JS) */
-.drawer-interior::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 2px;
-  background:
-    /* Warm ambient light flooding up from the open front */
-    radial-gradient(
-      ellipse 100% 80% at 50% 100%,
-      rgba(255, 190, 100, 0.35) 0%,
-      rgba(230, 160, 70, 0.18) 30%,
-      rgba(200, 130, 50, 0.06) 55%,
-      transparent 75%
-    ),
-    /* Subtle side wall catch light */
-    linear-gradient(
-      to right,
-      rgba(255, 180, 80, 0.06) 0%,
-      transparent 15%,
-      transparent 85%,
-      rgba(255, 180, 80, 0.06) 100%
-    ),
-    /* Top edge rim light */
-    linear-gradient(
-      to bottom,
-      rgba(255, 200, 120, 0.1) 0%,
-      transparent 8%
-    );
-  opacity: 0; /* Controlled by JS directly */
-  pointer-events: none;
-  will-change: opacity;
-}
-
-/* Side wall depth lines (left) — creates 3D inset look */
-.wall-left {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  background: linear-gradient(to right, #0A0806, #0E0C0A, #141110, transparent);
-  z-index: 2;
-}
-
-/* Side wall depth lines (right) */
-.wall-right {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  background: linear-gradient(to left, #0A0806, #0E0C0A, #141110, transparent);
-  z-index: 2;
-}
-
-/* Back wall - visible dark back surface */
-.wall-back {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 0;
-  height: 14px;
-  background: linear-gradient(to bottom, #080604, #0C0A08, #12100E, transparent);
-  z-index: 2;
-}
-
-/* Bottom surface — catches warm light */
-.wall-bottom {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
-  height: 10px;
-  background: linear-gradient(to top, #12100E, transparent);
-  z-index: 2;
-}
-
-/* ── FILE RAILS ─────────────────────────────────────────── */
-.file-rail {
-  position: absolute;
-  top: 15px;
-  width: 3px;
-  height: calc(100% - 30px);
-  background: linear-gradient(to bottom,
-    #4A3C30 0%,
-    #5A4A3A 20%,
-    #4A3C30 40%,
-    #5A4A3A 60%,
-    #4A3C30 80%,
-    #5A4A3A 100%
-  );
-  border-radius: 1.5px;
-  box-shadow:
-    1px 0 4px rgba(0, 0, 0, 0.6),
-    inset 0 0 1px rgba(255, 255, 255, 0.08);
-  z-index: 3;
-}
-
-.rail-left { left: 16px; }
-.rail-right { right: 16px; }
-
-/* ── FILE FOLDERS ───────────────────────────────────────── */
-.drawer-files {
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  top: 32px;  /* room for folder tabs to protrude */
-  bottom: 10px;
-  display: flex;
-  align-items: stretch;
   justify-content: center;
-  gap: 5px;
-  z-index: 4;
-  pointer-events: none;
-  opacity: 0;
-  will-change: opacity;
+  padding: clamp(2rem, 8vw, 6rem);
+  max-width: 760px;
 }
 
-.file-folder {
-  position: relative;
-  flex: 1;
-  max-width: 120px;
-  cursor: pointer;
-  outline: none;
-  pointer-events: auto;
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
-  transform: translateY(0px);
-}
-
-/* Slight visual variety in height positioning — like real files */
-.file-folder:nth-child(1) { transform: translateY(3px); }
-.file-folder:nth-child(2) { transform: translateY(-2px); }
-.file-folder:nth-child(3) { transform: translateY(1px); }
-.file-folder:nth-child(4) { transform: translateY(-1px); }
-
-/* Folder tab sticking out the top */
-.folder-tab-label {
-  position: absolute;
-  top: -26px;
-  height: 28px;
-  padding: 3px 8px;
-  background: linear-gradient(to bottom, #C9A678, var(--folder-tab));
-  border-radius: 4px 4px 0 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  clip-path: polygon(0 100%, 0 25%, 5% 0, 95% 0, 100% 25%, 100% 100%);
-  white-space: nowrap;
-  z-index: 2;
-  box-shadow: 0 -1px 3px rgba(0,0,0,0.2);
-}
-
-/* Stagger tab positions across the top — like a real filing cabinet */
-.file-folder:nth-child(1) .folder-tab-label { left: 2px; right: auto; width: auto; min-width: 90px; }
-.file-folder:nth-child(2) .folder-tab-label { left: 12px; right: auto; width: auto; min-width: 96px; }
-.file-folder:nth-child(3) .folder-tab-label { left: 0; right: auto; width: auto; min-width: 100px; }
-.file-folder:nth-child(4) .folder-tab-label { left: 8px; right: auto; width: auto; min-width: 85px; }
-
-.folder-num {
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: rgba(42, 36, 32, 0.7);
-  letter-spacing: 0.06em;
-}
-
-.folder-name {
-  font-family: var(--font-display);
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: #2A2420;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-shadow: 0 0 1px rgba(255, 255, 255, 0.15);
-}
-
-/* Folder body — the manila paper part */
-.folder-body {
-  position: absolute;
-  inset: 0;
-  background:
-    /* Ruled lines — subtle horizontal texture */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 11px,
-      rgba(0,0,0,0.035) 11px,
-      rgba(0,0,0,0.035) 12px
-    ),
-    /* Wear marks — coffee stains, age spots */
-    radial-gradient(ellipse 60% 30% at 25% 65%, rgba(180, 150, 110, 0.3) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 75% 25%, rgba(170, 140, 100, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 35% 35% at 50% 85%, rgba(160, 130, 90, 0.12) 0%, transparent 70%),
-    /* Base manila — warm parchment */
-    linear-gradient(175deg, #D0B492, #C8AA86, #BEA07A, #B89A74);
-  border-radius: 0 3px 3px 3px;
-  box-shadow:
-    3px 0 8px rgba(0, 0, 0, 0.4),
-    -1px 0 4px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06);
-}
-
-/* Folder crease shadow + warm light catch at bottom */
-.folder-body::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 40%;
-  background:
-    linear-gradient(to top,
-      rgba(255, 180, 80, 0.08),
-      rgba(0, 0, 0, 0.08) 40%,
-      transparent
-    );
-  border-radius: 0 0 3px 3px;
-  pointer-events: none;
-}
-
-/* Hover — folder rises out of the drawer */
-.file-folder:hover {
-  transform: translateY(-8px) !important;
-  filter: brightness(1.15);
-  z-index: 10;
-}
-
-.file-folder:hover .folder-body {
-  box-shadow:
-    3px 0 12px rgba(0, 0, 0, 0.45),
-    0 8px 24px rgba(196, 130, 58, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.file-folder:hover .folder-tab-label {
-  background: linear-gradient(to bottom, #D4BC8E, var(--folder-hover));
-}
-
-/* Focus visible */
-.file-folder:focus-visible .folder-body {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Active / selected */
-.file-folder.active .folder-body {
-  background: linear-gradient(175deg, #DCC0A0, #D4B894, #CCAE88);
-  box-shadow:
-    3px 0 12px rgba(0, 0, 0, 0.45),
-    0 4px 16px rgba(196, 130, 58, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* ── CABINET FRAME ──────────────────────────────────────── */
-.cabinet-frame {
-  position: absolute;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23221C16'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%23282018' opacity='0.3'/%3E%3C/svg%3E"),
-    linear-gradient(180deg, #2E2418, #221C16, #1A1410);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.frame-top {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--frame-w);
-  border-radius: 3px 3px 0 0;
-}
-
-.frame-bottom {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--frame-w);
-  border-radius: 0 0 3px 3px;
-}
-
-.frame-left {
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--frame-w);
-  border-radius: 3px 0 0 3px;
-}
-
-.frame-right {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: var(--frame-w);
-  border-radius: 0 3px 3px 0;
-}
-
-/* ── SCENE DIM OVERLAY ──────────────────────────────────── */
-#scene-dim {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 35;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
-#scene-dim.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* ── ABOUT OVERLAY ──────────────────────────────────────── */
-#about-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: clamp(2rem, 6vw, 5rem);
-  pointer-events: none;
-  will-change: opacity;
-}
-
-.about-inner {
-  max-width: 600px;
-  pointer-events: inherit; /* inherits from #about-overlay, which JS sets to none when faded */
-}
-
+/* ── ABOUT CONTENT ──────────────────────────────────────── */
 .about-eyebrow {
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -763,7 +57,7 @@ button {
   color: var(--accent);
   margin-bottom: 1rem;
   opacity: 0;
-  transform: translateY(12px);
+  animation: fadeUp 0.6s ease forwards 0.2s;
 }
 
 .about-name {
@@ -775,7 +69,7 @@ button {
   color: var(--text);
   margin-bottom: 1.25rem;
   opacity: 0;
-  transform: translateY(16px);
+  animation: fadeUp 0.7s ease forwards 0.35s;
 }
 
 .about-tagline {
@@ -785,15 +79,15 @@ button {
   color: var(--text-muted);
   font-style: italic;
   margin-bottom: 2rem;
-  opacity: 0;
-  transform: translateY(12px);
   min-height: 1.5em;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards 0.5s;
 }
 
 .about-details {
-  opacity: 0;
-  transform: translateY(10px);
   margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards 0.65s;
 }
 
 .about-details p {
@@ -810,8 +104,7 @@ button {
   gap: 1.5rem;
   flex-wrap: wrap;
   opacity: 0;
-  transform: translateY(10px);
-  margin-bottom: 3.5rem;
+  animation: fadeUp 0.6s ease forwards 0.8s;
 }
 
 .about-link {
@@ -825,7 +118,6 @@ button {
   padding: 0.5rem 0;
   border-bottom: 1px solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
-  pointer-events: auto; /* clickable even when parent inherits none */
 }
 
 .about-link:hover {
@@ -835,283 +127,41 @@ button {
 
 .about-link svg { flex-shrink: 0; }
 
-.scroll-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  opacity: 0;
-}
-
-.scroll-hint-text {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.scroll-hint-arrow {
-  color: var(--accent);
-  animation: bounceDown 1.8s ease-in-out infinite;
-  margin-left: 0.2rem;
-}
-
-@keyframes bounceDown {
-  0%, 100% { transform: translateY(0); opacity: 0.6; }
-  50%       { transform: translateY(6px); opacity: 1; }
-}
-
-/* ── PROJECT PANEL ──────────────────────────────────────── */
-#project-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: min(var(--panel-width), 92vw);
-  height: 100vh;
-  z-index: 40;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border);
-  transform: translateX(100%);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--metal-mid) transparent;
-}
-
-#project-panel.open { transform: translateX(0); }
-
-#project-panel::-webkit-scrollbar { width: 4px; }
-#project-panel::-webkit-scrollbar-track { background: transparent; }
-#project-panel::-webkit-scrollbar-thumb { background: var(--metal-mid); border-radius: 4px; }
-
-#panel-close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(26, 20, 16, 0.92);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  z-index: 2;
-}
-
-#panel-close:hover {
-  color: var(--text);
-  background: rgba(60, 45, 30, 0.9);
-}
-
-.panel-content { padding: 1.75rem 2rem 3rem; }
-
-.panel-number {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--accent);
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-}
-
-.panel-title {
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--text);
-  margin-bottom: 1.25rem;
-}
-
-.panel-description {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  line-height: 1.75;
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.panel-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.panel-tag {
-  display: inline-block;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  border-radius: 4px;
-  background: var(--bg-elevated);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-
-.panel-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.panel-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--accent);
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  text-align: left;
-}
-
-.panel-link:hover {
-  background: var(--metal-mid);
-  border-color: var(--accent);
-  color: var(--accent-light);
-}
-
-.panel-meta {
-  font-size: 0.8rem;
-  color: var(--text-faint);
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-/* ── LOADING SCREEN ─────────────────────────────────────── */
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.6s ease;
-}
-
-#loading-screen.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.loading-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--metal-mid);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-text {
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
 /* ── FOOTER ─────────────────────────────────────────────── */
 #site-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 25;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem clamp(1rem, 3vw, 2rem);
+  padding: 0.75rem;
   font-size: 0.68rem;
   color: var(--text-faint);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  animation: fadeIn 0.6s ease forwards 1.2s;
 }
 
-#site-footer.visible {
-  opacity: 1;
-  pointer-events: auto;
+/* ── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── REDUCED MOTION ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .scroll-hint-arrow { animation: none; }
-  .loading-spinner { animation: none; }
-  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ── RESPONSIVE — MOBILE ────────────────────────────────── */
-@media (max-width: 768px) {
-  :root {
-    --cab-width: 90vw;
-    --cab-height: 70vh;
-    --drawer-h: 100px;
-    --drawer-depth: 120px;
-    --perspective: 700px;
-    --scene-z: 500px;
-  }
-
-  .about-name { font-size: clamp(2.5rem, 12vw, 4rem); }
-
-  .folder-tab-label {
-    display: none; /* Too small on mobile, just show folder bodies */
-  }
-
-  #project-panel {
-    width: 100vw;
-    border-left: none;
-    border-top: 1px solid var(--border);
-    height: 85vh;
-    top: auto;
-    bottom: 0;
-    transform: translateY(100%);
-    border-radius: 12px 12px 0 0;
-  }
-
-  #project-panel.open { transform: translateY(0); }
-}
-
+/* ── RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 480px) {
-  #about-overlay {
-    align-items: flex-end;
-    padding-bottom: 40vh;
-  }
-
-  :root {
-    --cab-width: 95vw;
-    --drawer-h: 80px;
-    --drawer-depth: 90px;
-    --perspective: 600px;
-    --scene-z: 400px;
-  }
+  #landing { padding: 2rem 1.5rem; }
+  .about-name { font-size: clamp(2.5rem, 12vw, 4rem); }
 }
