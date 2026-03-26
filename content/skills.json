@@ -1,0 +1,39 @@
+{
+  "intro": "Things I work with — not ranked, just catalogued.",
+  "categories": [
+    {
+      "title": "HARDWARE",
+      "tags": [
+        { "name": "Circuit Design", "detail": "PCB to prototype" },
+        { "name": "PCB Layout", "detail": "Altium & KiCad" },
+        { "name": "Signal Processing", "detail": "Analog & digital" },
+        { "name": "Microcontrollers", "detail": "STM32, ESP32, Arduino" },
+        { "name": "Sensor Integration", "detail": "IMU, LiDAR, pressure" },
+        { "name": "Prototyping", "detail": "Soldering & assembly" }
+      ]
+    },
+    {
+      "title": "SOFTWARE",
+      "tags": [
+        { "name": "Python", "detail": "Daily drivers" },
+        { "name": "C / C++", "detail": "Performance-critical work" },
+        { "name": "Embedded Systems", "detail": "RTOS & bare-metal" },
+        { "name": "Machine Learning", "detail": "TensorFlow & PyTorch" },
+        { "name": "Computer Vision", "detail": "OpenCV & YOLO" },
+        { "name": "Robotics", "detail": "ROS2 & middleware" },
+        { "name": "Web Dev", "detail": "This site, basically" }
+      ]
+    },
+    {
+      "title": "AEROSPACE",
+      "tags": [
+        { "name": "Aerodynamics", "detail": "CFD & wind tunnel" },
+        { "name": "Flight Dynamics", "detail": "Stability & control" },
+        { "name": "Propulsion", "detail": "Electric & hybrid" },
+        { "name": "UAV Design", "detail": "End-to-end builds" },
+        { "name": "Orbital Mechanics", "detail": "Keplerian mechanics" },
+        { "name": "CAD", "detail": "SolidWorks & Fusion" }
+      ]
+    }
+  ]
+}

@@ -1,19 +1,20 @@
 /**
  * Random tagline picker
+ * Reads taglines from the data-taglines attribute injected at build time.
  */
-
-const TAGLINES = [
-  '"Making electrons do useless things — some more useless than others."',
-  '"I build things that fly, things that think, and things nobody asked for."',
-  '"Somewhere between the schematic and the crash log is where I live."',
-  '"If it doesn\'t have a battery, I\'m probably not interested."',
-  '"Building at the edge of hardware and sky."',
-  '"Transmitting from Princeton, NJ."',
-];
 
 export function initTaglines() {
   const el = document.getElementById('tagline');
-  if (el) {
-    el.textContent = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
+  if (!el) return;
+
+  const raw = el.getAttribute('data-taglines');
+  if (raw) {
+    try {
+      const taglines = JSON.parse(raw);
+      el.textContent = taglines[Math.floor(Math.random() * taglines.length)];
+    } catch (e) {
+      // Fallback if parsing fails
+      el.textContent = el.textContent || '';
+    }
   }
 }

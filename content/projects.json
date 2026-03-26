@@ -1,0 +1,44 @@
+{
+  "projects": [
+    {
+      "id": "01",
+      "name": "AEOLUS",
+      "subtitle": "Autonomous Wind-Mapping Drone",
+      "status": "active",
+      "statusLabel": "IN DEVELOPMENT",
+      "description": "A self-navigating UAV that maps wind patterns in real-time using an array of pressure sensors and ML-based flow prediction. Built for Princeton Robotics Lab.",
+      "tags": ["Embedded C", "ROS2", "PCB Design", "Python", "TensorFlow Lite"],
+      "thumbnail": "aeolus"
+    },
+    {
+      "id": "02",
+      "name": "SIGNAL/NOISE",
+      "subtitle": "RF Signal Classifier",
+      "status": "active",
+      "statusLabel": "ACTIVE",
+      "description": "A real-time system that identifies and classifies radio frequency signals using software-defined radio and a custom neural network.",
+      "tags": ["SDR", "PyTorch", "C++", "DSP", "FPGA"],
+      "thumbnail": "signal-noise"
+    },
+    {
+      "id": "03",
+      "name": "PAPER TIGER",
+      "subtitle": "Origami-Inspired Deployable Structure",
+      "status": "complete",
+      "statusLabel": "COMPLETE",
+      "description": "Research exploring origami-based folding patterns for deployable aerospace structures. Compact for launch, expansive in orbit.",
+      "tags": ["MATLAB", "SolidWorks", "FEA", "3D Printing"],
+      "thumbnail": "paper-tiger"
+    },
+    {
+      "id": "04",
+      "name": "VOLTAIC",
+      "subtitle": "High-Efficiency Solar MPPT Controller",
+      "status": "complete",
+      "statusLabel": "COMPLETE",
+      "description": "A maximum power point tracking controller for CubeSat solar panels, achieving 97.3% tracking efficiency.",
+      "tags": ["Altium", "Embedded C", "Power Electronics", "Space-Grade"],
+      "thumbnail": "voltaic"
+    }
+  ]
+}

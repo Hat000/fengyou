@@ -6,66 +6,93 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal portfolio website for Fengyou Liu (Princeton '29, EE/Aerospace). Live at **https://www.fengyou.org**, hosted on GitHub Pages from the `main` branch of `Hat000/fengyou`.
 
-## Core Concept
-
-A simple, static landing page on a dark background. Shows name, tagline, bio, and links. No scrolling behavior, no animations beyond a CSS fade-in on load.
-
 ## Stack & Deployment
 
-- **Pure HTML/CSS/JS** — no framework, no bundler, no npm, no build step
-- **No CDN dependencies** — just Google Fonts
-- **Deployment**: Push to `main` branch on GitHub → GitHub Pages auto-deploys
-- **Local preview**: `npx serve . -l 3000` or use Claude Preview
+- **Vite** build system with ES modules
+- **Three.js** (3D crane scene), **GSAP + ScrollTrigger** (animations), **Lenis** (smooth scroll), **SplitType** (text effects)
+- **Google Fonts** CDN (Space Grotesk, Inter, JetBrains Mono)
+- **Deployment**: `npm run build` → push `dist/` to `main` on GitHub → GitHub Pages auto-deploys
+- **Dev server**: `npm run dev` (Vite on port 3000) or use Claude Preview
 - **Domain**: `www.fengyou.org` via CNAME file — **do not modify CNAME**
+
+## Content Management
+
+All site content is stored in JSON files in the `content/` directory. A custom Vite plugin (`vite-plugin-content.js`) injects this content into the HTML at build time, so the output is fully static and SEO-friendly.
+
+**To update content:**
+1. Edit the relevant JSON file in `content/`
+2. Run `npm run build`
+3. Push to GitHub
+
+**Content files:**
+
+| File | What it controls |
+|---|---|
+| `content/hero.json` | Name, eyebrow text, taglines, bio, hero links |
+| `content/about.json` | Bio paragraphs, stats grid, photo path |
+| `content/skills.json` | Skill categories and tags with details |
+| `content/projects.json` | Project cards (id, name, subtitle, status, description, tags) |
+| `content/experience.json` | Timeline entries (year, org, role, detail) |
+| `content/contact.json` | Contact headline, subtext, links, footer text |
+
+**Adding a new project:** Copy an existing entry in `content/projects.json`, change the fields, and rebuild. New projects get a default thumbnail SVG automatically. To add a custom thumbnail, add an entry to the `THUMBNAILS` map in `src/scripts/render-content.js`.
 
 ## File Architecture
 
-| File | Purpose |
-|---|---|
-| `index.html` | Single page: landing section with name/tagline/bio/links, footer (~65 lines) |
-| `main.css` | All styles (~145 lines). Design tokens in `:root`. CSS fade-in animations on load. |
-| `script.js` | Picks a random tagline from a list and sets it on page load (~8 lines) |
-| `FengyouLiu.jpg` | Profile photo |
-| `CNAME` | GitHub Pages domain config — do not touch |
-| `.claude/launch.json` | Dev server config for Claude Preview |
+```
+content/                    ← Content JSON files (edit these to update the site)
+  hero.json, about.json, skills.json, projects.json, experience.json, contact.json
+src/
+  index.html                ← HTML template with <!-- CONTENT:section --> placeholders
+  scripts/
+    main.js                 ← Entry point: initializes all modules in sequence
+    scene.js                ← Three.js 3D crane scene, particles, camera
+    animations.js           ← GSAP scroll-triggered text/element animations
+    cursor.js               ← Custom cursor with aura + magnetic hover
+    nav.js                  ← Numbered navigation + scroll spy
+    scroll.js               ← Lenis smooth scroll setup
+    taglines.js             ← Random tagline picker (reads from data attribute)
+    render-content.js       ← Build-time HTML renderer (used by Vite plugin)
+  styles/
+    main.css                ← All styles (~1500 lines)
+public/
+  CNAME                     ← GitHub Pages domain config — do not touch
+  FengyouLiu.jpg            ← Profile photo
+vite.config.js              ← Vite config (registers content plugin)
+vite-plugin-content.js      ← Custom plugin: reads content/*.json → injects into HTML
+dist/                       ← Build output (deployed to GitHub Pages)
+```
+
+Root-level `index.html`, `main.css`, and `script.js` are the **original simple landing page** from the `main` branch. The redesign lives entirely in `src/`.
+
+## Page Sections
+
+The site has 6 scrollable sections plus a footer:
+
+1. **Hero** — eyebrow, name, random tagline, bio, links
+2. **About** — bio paragraphs, stats grid, photo
+3. **Skills** — three categories (Hardware, Software, Aerospace) with tags
+4. **Projects** — mission-style cards with thumbnails, status, tags
+5. **Experience** — vertical timeline with wave icons
+6. **Contact** — headline, subtext, links
+7. **Footer** — message + copyright
+
+Navigation: numbered dot buttons (01–06) with scroll spy. Theme toggle (light/dark).
+
+## Key Technical Details
+
+- **Content injection**: `vite-plugin-content.js` runs `transformIndexHtml` to replace `<!-- CONTENT:section -->` placeholders with rendered HTML from `render-content.js`. Content JSON files are watched for HMR in dev.
+- **Animation classes**: `render-content.js` must output HTML with exact CSS classes that `animations.js` queries: `.split-chars`, `.split-lines`, `.scramble-text`, `.mission-card`, `.timeline-entry`, `.toolkit-tag`, etc.
+- **Taglines**: All taglines are embedded in a `data-taglines` attribute on `#tagline` at build time. `taglines.js` picks one randomly at runtime.
 
 ## Design System
 
-**Color palette** (warm, dark):
-```css
-:root {
-  --bg:          #0F0C09;   /* warm near-black, page bg */
-  --text:        #F2EDE4;   /* warm cream, primary text */
-  --text-muted:  #A89880;   /* muted warm gray, secondary text */
-  --text-faint:  #6B5E52;   /* faint text, footer */
-  --accent:      #C4823A;   /* rust/amber — primary accent color */
-}
-```
+**Typography**: Space Grotesk (headings) + Inter (body) + JetBrains Mono (code/labels)
 
-**Typography**: Space Grotesk (display) + Inter (body) via Google Fonts CDN.
-
-## Page Structure
-
-```
-<main id="landing">
-  .about-eyebrow   — "Princeton '29 · EE & Aerospace"
-  .about-name      — "Fengyou Liu"
-  .about-tagline   — random tagline (set by script.js)
-  .about-details   — bio paragraph
-  .about-links     — Email, GitHub, LinkedIn links
-<footer id="site-footer">  — "© 2026 Fengyou Liu"
-```
-
-Each element fades in via a CSS `@keyframes fadeUp` animation with staggered `animation-delay`.
-
-## Responsive & Accessibility
-
-- **Mobile (≤480px)**: Padding reduced, name font size scales down
-- **`prefers-reduced-motion`**: All transitions/animations set to 0.01ms
+**Theme**: Dark by default with a light mode toggle. Colors defined in CSS custom properties in `src/styles/main.css`.
 
 ## Owner Preferences
 
 - Fengyou is not a web developer — explain changes in plain language
 - Design decisions are delegated to Claude — use good judgment on UI/UX
 - **Nature + engineer vibe** — warm textures, not cold techy-clean
-- Fun features (easter eggs, mini-games) are **Phase 3** — not in scope now

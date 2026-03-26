@@ -1,0 +1,18 @@
+{
+  "eyebrow": "[ PRINCETON '29 · EE & AEROSPACE ]",
+  "name": "Fengyou Liu",
+  "taglines": [
+    "\"Making electrons do useless things — some more useless than others.\"",
+    "\"I build things that fly, things that think, and things nobody asked for.\"",
+    "\"Somewhere between the schematic and the crash log is where I live.\"",
+    "\"If it doesn't have a battery, I'm probably not interested.\"",
+    "\"Building at the edge of hardware and sky.\"",
+    "\"Transmitting from Princeton, NJ.\""
+  ],
+  "bio": "I build things at the intersection of hardware and software — systems that move, sense, and think. Currently studying Electrical & Aerospace Engineering at Princeton, trying to make electrons do interesting things.",
+  "links": [
+    { "label": "Email", "url": "mailto:fengyou@princeton.edu", "icon": "email" },
+    { "label": "GitHub", "url": "https://github.com/Hat000", "icon": "github" },
+    { "label": "LinkedIn", "url": "https://linkedin.com/in/fengyou-liu", "icon": "linkedin" }
+  ]
+}

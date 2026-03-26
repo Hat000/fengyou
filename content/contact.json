@@ -1,0 +1,13 @@
+{
+  "headline": "LET'S <span class=\"accent\">CONNECT</span>",
+  "subtext": "Whether it's a satellite or a side project, I'm always up for a conversation.",
+  "links": [
+    { "label": "Email", "url": "mailto:fengyou@princeton.edu", "icon": "email" },
+    { "label": "GitHub", "url": "https://github.com/Hat000", "icon": "github" },
+    { "label": "LinkedIn", "url": "https://linkedin.com/in/fengyou-liu", "icon": "linkedin" }
+  ],
+  "footer": {
+    "message": "Thanks for visiting.",
+    "copy": "© 2026 Fengyou Liu"
+  }
+}

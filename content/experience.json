@@ -1,0 +1,36 @@
+{
+  "entries": [
+    {
+      "year": "2025",
+      "date": "2025 — PRESENT",
+      "org": "Princeton University",
+      "role": "Electrical & Aerospace Engineering",
+      "detail": "Pursuing a BSE with focus on autonomous systems and embedded hardware. Research assistant in the Robotics Lab.",
+      "iconType": "wave"
+    },
+    {
+      "year": "2025s",
+      "date": "SUMMER 2025",
+      "org": "Skyline Avionics",
+      "role": "Hardware Engineering Intern",
+      "detail": "Designed sensor fusion boards for next-gen UAV navigation. 3 PCBs from schematic to production in 10 weeks.",
+      "iconType": "zigzag"
+    },
+    {
+      "year": "2024",
+      "date": "2024",
+      "org": "Princeton Plasma Physics Lab",
+      "role": "Undergraduate Research Assistant",
+      "detail": "Built data acquisition systems for plasma diagnostics. Wrote real-time signal processing pipelines in C++.",
+      "iconType": "smooth"
+    },
+    {
+      "year": "2023",
+      "date": "2023",
+      "org": "FIRST Robotics Competition",
+      "role": "Team Lead, Electrical Systems",
+      "detail": "Led the electrical subsystem for a 120lb competition robot. Regional finalists. Designed the entire power distribution and sensor network.",
+      "iconType": "sharp"
+    }
+  ]
+}
