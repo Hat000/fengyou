@@ -110,11 +110,48 @@ FLYING → APPROACHING (scroll > 0.92) → FLARING (scroll > 0.96) → LANDED (s
 
 ---
 
+## 7. Tail Feather Flutter
+
+**Problem**: The tail is completely static — it's a rigid triangular wedge that never moves. Real birds' tail feathers flex and fan during flight, especially during turns and speed changes.
+
+**Solution**: Animate the tail tip vertex (the one at `z=-0.55`) with a subtle lateral sway and vertical flutter, tied to both time and crane speed:
+```js
+// Tail tip vertex (index ~33-35 area, the 0,0.04,-0.55 vertex)
+const tailFlutter = Math.sin(time * 3) * 0.015 + Math.sin(time * 5.5) * 0.008;
+const tailSway = Math.sin(time * 1.8) * 0.02 * (1 + craneSpeed * 30);
+// Apply to tail tip Y and X
+```
+The tail should also fan slightly wider during turns (spread the two side tail vertices apart when yaw is changing quickly).
+
+**Files**: `src/scripts/scene.js` — `animateWings()` function (extend to animate tail vertices too).
+
+---
+
+## 8. Head Nod During Flight
+
+**Problem**: The crane's head/neck is rigid — it looks taxidermied. Real cranes bob their heads subtly during flight, especially when changing altitude.
+
+**Solution**: Add a gentle vertical oscillation to the head/beak vertex (at `0, 0.12, 0.56`) and neck tip (at `0, 0.16, 0.42`). The bob should be:
+- Frequency: roughly 2x the wing flap frequency (head bobs on each downstroke)
+- Amplitude: very subtle (~0.01-0.02 Y offset)
+- Extra nod when descending (`craneVelY < 0`)
+
+```js
+const headBob = Math.sin(time * 5) * 0.012 + (craneVelY < 0 ? craneVelY * 3 : 0);
+// Apply to neck tip and beak vertices
+```
+
+**Files**: `src/scripts/scene.js` — `animateWings()` function (extend to animate head vertices too).
+
+---
+
 ## Implementation Order (suggested)
 
 1. **Fix turning direction** (#2) — quickest fix, biggest visual improvement
 2. **Add roll** (#3) — pairs with #2, both are rotation fixes
 3. **More wing flapping** (#1) — straightforward amplitude change
-4. **Body thickness** (#4) — geometry change, moderate effort
-5. **Dark mode night bird** (#5) — material swap, moderate effort
-6. **Landing animation** (#6) — most complex, save for last
+4. **Tail flutter** (#7) — pairs with #1, both vertex animations
+5. **Head nod** (#8) — pairs with #7, completes the life-like motion set
+6. **Body thickness** (#4) — geometry change, moderate effort
+7. **Dark mode night bird** (#5) — material swap, moderate effort
+8. **Landing animation** (#6) — most complex, save for last

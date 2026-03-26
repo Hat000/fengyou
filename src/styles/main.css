@@ -796,9 +796,7 @@ body.cursor-idle .cursor-core { opacity: 0.5; }
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
-  /* Clouds shift upward as you scroll — falling perspective (set by scene.js) */
-  transform: translateY(calc(var(--scroll-offset, 0) * -200px));
-  transition: transform 0.4s ease-out;
+  /* Parallax handled by Three.js clouds — no CSS scroll shift needed */
 }
 
 .cloud {
@@ -1374,8 +1372,10 @@ body::before {
 
 /* ── FOOTER ────────────────────────────────────────────── */
 .section-footer {
-  background: rgba(180, 200, 220, 0.15);
-  min-height: 50vh;
+  background: transparent;
+  min-height: auto;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
   flex-direction: column;
   justify-content: center;
   align-items: center;

@@ -102,7 +102,7 @@ export function initScene() {
         (Math.random() - 0.5) * 10,
         layer.zRange[0] + Math.random() * (layer.zRange[1] - layer.zRange[0])
       );
-      sprite.userData.speed = 0.0003 + Math.random() * 0.0006;
+      sprite.userData.speed = 0.0006 + Math.random() * 0.0012;
       sprite.userData.drift = Math.random() * Math.PI * 2;
       sprite.userData.baseOpacity = baseOpacity;
       layer.group.add(sprite);
@@ -303,6 +303,17 @@ export function initScene() {
       starGeometry.attributes.position.needsUpdate = true;
     }
 
+    // Crane color: dark slate-blue in dark mode (owl/hawk), warm paper in light
+    const targetBodyColor = dark ? 0x2A3848 : 0xB8CAD8;
+    const targetEdgeColor = dark ? 0x4A6070 : 0x8A9AAC;
+    craneMaterial.color.lerp(new THREE.Color(targetBodyColor), 0.05);
+    edgeMaterial.color.lerp(new THREE.Color(targetEdgeColor), 0.05);
+    if (!isFolding) {
+      const targetEmissive = dark ? 0x1A1008 : 0x000000;
+      craneMaterial.emissive.lerp(new THREE.Color(targetEmissive), 0.05);
+      craneMaterial.emissiveIntensity += ((dark ? 0.08 : 0) - craneMaterial.emissiveIntensity) * 0.05;
+    }
+
     // Dynamic fog
     const baseFogDensity = dark ? 0.03 : 0.04;
     scene.fog.density = baseFogDensity + scrollProgress * 0.03;
@@ -348,14 +359,21 @@ export function initScene() {
       // This correctly flips the crane to face its direction of travel
       targetYaw = Math.atan2(craneVelX, 0.001);
       targetPitch = -craneVelY * 2.5;
-      targetBank = -craneVelX * 1.5;
     }
 
     // Smooth rotation (low factor = graceful, no snapping)
     const rotLerp = 0.025;
-    currentYaw += (targetYaw - currentYaw) * rotLerp;
+    // Normalize yaw delta to [-PI, PI] so the crane takes the shortest turn
+    let yawDelta = targetYaw - currentYaw;
+    while (yawDelta > PI) yawDelta -= PI * 2;
+    while (yawDelta < -PI) yawDelta += PI * 2;
+    currentYaw += yawDelta * rotLerp;
     currentPitch += (targetPitch - currentPitch) * rotLerp;
-    currentBank += (targetBank - currentBank) * rotLerp;
+    // Bank proportional to turn rate (yaw angular velocity), not just lateral velocity
+    const yawRate = yawDelta;
+    targetBank = -yawRate * 0.6;
+    const bankLerp = 0.04; // bank responds faster than yaw (realistic)
+    currentBank += (targetBank - currentBank) * bankLerp;
 
     const bob = Math.sin(time * 1.57) * 0.04; // reduced bob amplitude
     const yawDrift = Math.sin(time * 0.785) * 0.03; // reduced yaw drift
@@ -378,8 +396,8 @@ export function initScene() {
     crane.scale.setScalar(smoothCrane.scale);
 
     // Wing flutter — tied to actual crane speed
-    const velocityFlutter = Math.min(craneSpeed * 8, 0.12);
-    animateWings(crane, time, velocityFlutter);
+    const velocityFlutter = Math.min(craneSpeed * 20, 0.30);
+    animateWings(crane, time, velocityFlutter, craneVelY);
 
     craneMaterial.opacity = 0.92;
     edgeMaterial.opacity = 0.6;
@@ -406,13 +424,13 @@ export function initScene() {
       const pos = geo.attributes.position.array;
       const orig = geo.userData.originalPositions;
       if (orig) {
-        const flapDown = foldAmount * -0.25; // wings push down
-        // Left wing tip (vertex 13) and related
-        pos[13 * 3 + 1] = orig[13 * 3 + 1] + flapDown;
-        pos[17 * 3 + 1] = orig[17 * 3 + 1] + flapDown * 0.8;
-        // Right wing tip (vertex 20) and related
-        pos[20 * 3 + 1] = orig[20 * 3 + 1] + flapDown;
-        pos[22 * 3 + 1] = orig[22 * 3 + 1] + flapDown * 0.8;
+        const flapDown = foldAmount * -0.50; // wings push down hard
+        // Left wing tip (vertex 25) and inner (vertex 29)
+        pos[25 * 3 + 1] = orig[25 * 3 + 1] + flapDown;
+        pos[29 * 3 + 1] = orig[29 * 3 + 1] + flapDown * 0.8;
+        // Right wing tip (vertex 32) and inner (vertex 34)
+        pos[32 * 3 + 1] = orig[32 * 3 + 1] + flapDown;
+        pos[34 * 3 + 1] = orig[34 * 3 + 1] + flapDown * 0.8;
         geo.attributes.position.needsUpdate = true;
         geo.computeVertexNormals();
       }
@@ -420,10 +438,11 @@ export function initScene() {
       // Gentle Z tilt
       crane.rotation.z = currentBank + foldAmount * 0.06;
 
-      // Subtle glow at peak
+      // Glow at peak — light parts glow in dark mode, dark parts in light mode
       edgeMaterial.opacity = 0.6 + foldAmount * 0.2;
-      craneMaterial.emissive.copy(glowColor);
-      craneMaterial.emissiveIntensity = foldAmount * 0.12;
+      const clickGlow = dark ? new THREE.Color(0xE8D8C8) : glowColor;
+      craneMaterial.emissive.copy(clickGlow);
+      craneMaterial.emissiveIntensity = foldAmount * (dark ? 0.35 : 0.12);
 
       if (t >= 1.0) {
         isFolding = false;
@@ -431,10 +450,10 @@ export function initScene() {
         // Reset wing vertices to original
         if (geo.userData.originalPositions) {
           const orig = geo.userData.originalPositions;
-          pos[13 * 3 + 1] = orig[13 * 3 + 1];
-          pos[17 * 3 + 1] = orig[17 * 3 + 1];
-          pos[20 * 3 + 1] = orig[20 * 3 + 1];
-          pos[22 * 3 + 1] = orig[22 * 3 + 1];
+          pos[25 * 3 + 1] = orig[25 * 3 + 1];
+          pos[29 * 3 + 1] = orig[29 * 3 + 1];
+          pos[32 * 3 + 1] = orig[32 * 3 + 1];
+          pos[34 * 3 + 1] = orig[34 * 3 + 1];
           geo.attributes.position.needsUpdate = true;
           geo.computeVertexNormals();
         }
@@ -447,7 +466,7 @@ export function initScene() {
     // ── PARALLAX CLOUD LAYERS ──────────────────────
     cloudLayers.forEach(layer => {
       // Clouds drift upward as you scroll (parallax depth)
-      layer.group.position.y = -scrollProgress * layer.scrollSpeed * 3;
+      layer.group.position.y = scrollProgress * layer.scrollSpeed * 3;
 
       layer.group.children.forEach((cloud, i) => {
         // Slow horizontal drift
@@ -495,11 +514,16 @@ function buildCrane() {
   const group = new THREE.Group();
 
   const vertices = new Float32Array([
-    // BODY
-    0, 0, 0.08,       -0.15, 0, -0.1,   0.15, 0, -0.1,
-    0, 0, 0.08,       0.15, 0, -0.1,    0, -0.02, -0.35,
-    0, 0, 0.08,       0, -0.02, -0.35,  -0.15, 0, -0.1,
-    -0.15, 0, -0.1,   0, -0.02, -0.35,  0.15, 0, -0.1,
+    // BODY — upper surface (diamond ridge at y=0.06)
+    0, 0.06, 0.08,     -0.15, 0, -0.1,   0.15, 0, -0.1,      // front upper
+    0, 0.06, 0.08,     0.15, 0, -0.1,    0, 0.04, -0.35,      // right upper
+    0, 0.06, 0.08,     0, 0.04, -0.35,   -0.15, 0, -0.1,      // left upper
+    -0.15, 0, -0.1,    0, 0.04, -0.35,   0.15, 0, -0.1,       // rear upper
+    // BODY — lower surface (keel at y=-0.06)
+    0, -0.06, 0.08,    0.15, 0, -0.1,    -0.15, 0, -0.1,      // front lower
+    0, -0.06, 0.08,    0, -0.06, -0.35,  0.15, 0, -0.1,       // right lower
+    0, -0.06, 0.08,    -0.15, 0, -0.1,   0, -0.06, -0.35,     // left lower
+    -0.15, 0, -0.1,    0.15, 0, -0.1,    0, -0.06, -0.35,     // rear lower
     // LEFT WING
     -0.15, 0, -0.1,   -0.9, 0.15, -0.2, -0.15, 0, -0.25,
     -0.15, -0.01, -0.1, -0.15, -0.01, -0.25, -0.9, 0.12, -0.2,
@@ -507,15 +531,15 @@ function buildCrane() {
     0.15, 0, -0.1,    0.15, 0, -0.25,   0.9, 0.15, -0.2,
     0.15, -0.01, -0.1, 0.9, 0.12, -0.2, 0.15, -0.01, -0.25,
     // NECK — angled upward so the crane looks like it's flying with head raised
-    0, 0, 0.08,        -0.04, 0.02, 0.08, 0, 0.16, 0.42,
-    0, 0, 0.08,        0, 0.16, 0.42,     0.04, 0.02, 0.08,
+    0, 0.06, 0.08,      -0.04, 0.02, 0.08, 0, 0.16, 0.42,
+    0, 0.06, 0.08,      0, 0.16, 0.42,     0.04, 0.02, 0.08,
     -0.04, 0.02, 0.08, 0.04, 0.02, 0.08,  0, 0.16, 0.42,
     // HEAD — beak curves downward from the raised neck (like a real crane looking forward)
     0, 0.16, 0.42,     -0.02, 0.17, 0.42, 0, 0.12, 0.56,
     0, 0.16, 0.42,     0, 0.12, 0.56,     0.02, 0.17, 0.42,
     // TAIL
-    0, -0.02, -0.35,   -0.04, 0.02, -0.35, 0, 0.04, -0.55,
-    0, -0.02, -0.35,   0, 0.04, -0.55,     0.04, 0.02, -0.35,
+    0, -0.06, -0.35,   -0.04, 0.02, -0.35, 0, 0.04, -0.55,
+    0, -0.06, -0.35,   0, 0.04, -0.55,     0.04, 0.02, -0.35,
     -0.04, 0.02, -0.35, 0.04, 0.02, -0.35, 0, 0.04, -0.55,
   ]);
 
@@ -549,22 +573,50 @@ function buildCrane() {
   return group;
 }
 
-// ── WING ANIMATION ──────────────────────────────────────
-function animateWings(crane, time, velocityBoost = 0) {
+// ── WING + BODY ANIMATION ───────────────────────────────
+function animateWings(crane, time, velocityBoost = 0, craneVelY = 0) {
   const mesh = crane.children[0];
   const geo = mesh.geometry;
   const pos = geo.attributes.position.array;
   const orig = geo.userData.originalPositions;
   if (!orig) return;
 
-  const baseFlutter = Math.sin(time * 2.5) * 0.04;
+  // Wings: faster, larger base flutter + secondary harmonic for organic feel
+  const baseFlutter = Math.sin(time * 3.5) * 0.08 + Math.sin(time * 7) * 0.02;
   const velFlutter = Math.sin(time * 6) * velocityBoost;
   const wingFlutter = baseFlutter + velFlutter;
 
-  pos[13 * 3 + 1] = orig[13 * 3 + 1] + wingFlutter;
-  pos[17 * 3 + 1] = orig[17 * 3 + 1] + wingFlutter * 0.8;
-  pos[20 * 3 + 1] = orig[20 * 3 + 1] + wingFlutter;
-  pos[22 * 3 + 1] = orig[22 * 3 + 1] + wingFlutter * 0.8;
+  // Left wing tip (vertex 25) and inner (vertex 29)
+  pos[25 * 3 + 1] = orig[25 * 3 + 1] + wingFlutter;
+  pos[29 * 3 + 1] = orig[29 * 3 + 1] + wingFlutter * 0.8;
+  // Right wing tip (vertex 32) and inner (vertex 34)
+  pos[32 * 3 + 1] = orig[32 * 3 + 1] + wingFlutter;
+  pos[34 * 3 + 1] = orig[34 * 3 + 1] + wingFlutter * 0.8;
+
+  // Tail flutter: subtle sway and vertical oscillation
+  const tailFlutterY = Math.sin(time * 3) * 0.015 + Math.sin(time * 5.5) * 0.008;
+  const tailSwayX = Math.sin(time * 1.8) * 0.02 * (1 + velocityBoost * 2);
+  // Tail tip vertices at indices 53, 55, 59
+  pos[53 * 3]     = orig[53 * 3] + tailSwayX;
+  pos[53 * 3 + 1] = orig[53 * 3 + 1] + tailFlutterY;
+  pos[55 * 3]     = orig[55 * 3] + tailSwayX;
+  pos[55 * 3 + 1] = orig[55 * 3 + 1] + tailFlutterY;
+  pos[59 * 3]     = orig[59 * 3] + tailSwayX;
+  pos[59 * 3 + 1] = orig[59 * 3 + 1] + tailFlutterY;
+
+  // Head bob: subtle vertical oscillation, extra nod when descending
+  const headBob = Math.sin(time * 5) * 0.012 + (craneVelY < 0 ? craneVelY * 3 : 0);
+  const neckBob = headBob * 0.6;
+  // Neck tip vertices at indices 38, 40, 44
+  pos[38 * 3 + 1] = orig[38 * 3 + 1] + neckBob;
+  pos[40 * 3 + 1] = orig[40 * 3 + 1] + neckBob;
+  pos[44 * 3 + 1] = orig[44 * 3 + 1] + neckBob;
+  // Head base vertices at 45, 48 also get neck bob
+  pos[45 * 3 + 1] = orig[45 * 3 + 1] + neckBob;
+  pos[48 * 3 + 1] = orig[48 * 3 + 1] + neckBob;
+  // Beak vertices at indices 47, 49
+  pos[47 * 3 + 1] = orig[47 * 3 + 1] + headBob;
+  pos[49 * 3 + 1] = orig[49 * 3 + 1] + headBob;
 
   geo.attributes.position.needsUpdate = true;
   geo.computeVertexNormals();
