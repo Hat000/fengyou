@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -lah)",
+      "Bash(curl -s https://api.github.com/repos/Hat000/fengyou)",
+      "Bash(curl -s https://api.github.com/repos/Hat000/fengyou/contents/)",
+      "Bash(curl -s https://api.github.com/repos/Hat000/fengyou/branches)",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/commits?per_page=10\")",
+      "Bash(python -c \":*)",
+      "Bash(curl -s https://raw.githubusercontent.com/Hat000/fengyou/main/CNAME)",
+      "Bash(curl -s https://raw.githubusercontent.com/Hat000/fengyou/main/README.md)",
+      "Bash(curl -s https://raw.githubusercontent.com/Hat000/fengyou/main/index.html)",
+      "Bash(gh api repos/Hat000/fengyou/git/trees/main?recursive=1)",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/git/trees/main?recursive=1\")",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/contents/CNAME\")",
+      "Bash(python3 -c \"import sys,json,base64; print\\(base64.b64decode\\(json.load\\(sys.stdin\\)[''content'']\\).decode\\(\\)\\)\")",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/contents/README.md\")",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/contents/index.html\")",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/contents/main.css\")",
+      "Bash(curl -s \"https://api.github.com/repos/Hat000/fengyou/contents/ssl-manager.php\")",
+      "Bash(python3 -c \":*)",
+      "Bash(PYTHONIOENCODING=utf-8 python3 -c \":*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__Claude_Preview__preview_start",
+      "WebFetch(domain:www.igloo.inc)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__Desktop_Commander__read_file",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_playwright_playwright__browser_run_code"
+    ]
+  }
+}
