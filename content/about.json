@@ -1,11 +1,11 @@
 {
   "paragraphs": [
     "I've been taking things apart since I could hold a screwdriver. First it was radios and remote-control cars. Then it was drones. Now it's the boundary between physical systems and intelligent software.",
-    "At Princeton, I'm studying Electrical Engineering with a focus on Aerospace applications — building systems that need to work the first time, every time."
+    "At Princeton, I'm studying Electrical & Computer Engineering — building systems at the intersection of hardware and software, from embedded controllers to machine learning pipelines."
   ],
   "stats": [
     { "key": "LOCATION", "value": "Princeton, NJ" },
-    { "key": "STUDYING", "value": "EE & Aerospace" },
+    { "key": "STUDYING", "value": "ECE" },
     { "key": "FOCUS", "value": "Hardware × Software" },
     { "key": "STATUS", "value": "Building things", "pulse": true }
   ],

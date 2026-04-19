@@ -1,7 +1,7 @@
 {
   "name": "fengyou.org",
   "version": "2.0.0",
-  "description": "Personal portfolio for Fengyou Liu — Princeton '29, Electrical & Aerospace Engineering.",
+  "description": "Personal portfolio for Fengyou Liu — Princeton '29, Electrical & Computer Engineering.",
   "type": "module",
   "scripts": {
     "dev": "vite",
