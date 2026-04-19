@@ -25,14 +25,14 @@
       ]
     },
     {
-      "title": "AEROSPACE",
+      "title": "TOOLS",
       "tags": [
-        { "name": "Aerodynamics", "detail": "CFD & wind tunnel" },
-        { "name": "Flight Dynamics", "detail": "Stability & control" },
-        { "name": "Propulsion", "detail": "Electric & hybrid" },
-        { "name": "UAV Design", "detail": "End-to-end builds" },
-        { "name": "Orbital Mechanics", "detail": "Keplerian mechanics" },
-        { "name": "CAD", "detail": "SolidWorks & Fusion" }
+        { "name": "Altium / KiCad", "detail": "PCB EDA" },
+        { "name": "MATLAB / Simulink", "detail": "Simulation & modeling" },
+        { "name": "SolidWorks", "detail": "3D modeling & CAD" },
+        { "name": "LTspice", "detail": "Circuit simulation" },
+        { "name": "Git & Linux", "detail": "Dev environment" },
+        { "name": "Oscilloscope / LA", "detail": "Bench instruments" }
       ]
     }
   ]
